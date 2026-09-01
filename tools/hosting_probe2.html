@@ -1,0 +1,147 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe 2 — bypassing img-src</title>
+<style>
+body{font:15px/1.5 system-ui,sans-serif;margin:0;padding:22px;background:#f4f2ee;color:#1e2a38}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:21px;margin:0 0 6px}
+p.lead{margin:0 0 18px;color:#4a5a6a}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+th{background:#263547;color:#fff;text-align:left;padding:10px 12px;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+td{border-top:1px solid #e3e0da;padding:12px;vertical-align:middle}
+td.k{font-weight:700;font-size:17px;width:34px;color:#263547}
+.nm{font-weight:600}
+.why{color:#6b7885;font-size:13px;margin-top:3px}
+td.out{width:256px}
+.slot{position:relative;min-height:90px;display:flex;align-items:center;justify-content:center;
+background:repeating-linear-gradient(45deg,#f6dede,#f6dede 8px,#fbeaea 8px,#fbeaea 16px);
+border:1px dashed #c98b8b;border-radius:4px}
+.slot::before{content:"BLOCKED";position:absolute;color:#a33;font-size:12px;font-weight:700;opacity:.6}
+.slot>*{position:relative;z-index:1}
+canvas{display:block}
+#csp{margin-top:20px;background:#1c2733;color:#d8e2ec;border-radius:8px;padding:16px 18px;
+font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word}
+#csp b{color:#7fd6a8;font-family:system-ui,sans-serif;font-size:13px}
+.note{margin-top:18px;padding:13px 15px;background:#fff;border-left:4px solid #263547;border-radius:4px;font-size:14px}
+</style>
+<div class="wrap">
+<h1>Probe 2 — can we bypass the image block?</h1>
+<p class="lead">Probe 1 showed the host blocks every <code>data:</code> image, even ones written by
+script. These rows try routes that never load an image from a URL at all. Green means it works.
+The black panel at the bottom reports the host's actual security policy — <strong>send me that text</strong>.</p>
+
+<table>
+<tr><th></th><th>Technique</th><th>Result</th></tr>
+
+<tr><td class="k">L</td>
+<td><div class="nm">Canvas + createImageBitmap(Blob)</div>
+<div class="why">JPEG bytes decoded natively from a Blob. No URL, so img-src should not apply.</div></td>
+<td class="out"><div class="slot"><canvas id="cL" width="240" height="90"></canvas></div></td></tr>
+
+<tr><td class="k">M</td>
+<td><div class="nm">Canvas + blob: URL</div>
+<div class="why">Same bytes, but via a blob: URL and an Image element.</div></td>
+<td class="out"><div class="slot"><canvas id="cM" width="240" height="90"></canvas></div></td></tr>
+
+<tr><td class="k">N</td>
+<td><div class="nm">Canvas + putImageData</div>
+<div class="why">Raw pixels from a JS array. Never an image at all — the control case.</div></td>
+<td class="out"><div class="slot"><canvas id="cN" width="240" height="90"></canvas></div></td></tr>
+
+<tr><td class="k">O</td>
+<td><div class="nm">SVG foreignObject</div>
+<div class="why">HTML inside inline SVG.</div></td>
+<td class="out"><div class="slot"><svg width="240" height="90" xmlns="http://www.w3.org/2000/svg"><foreignObject width="240" height="90"><div xmlns="http://www.w3.org/1999/xhtml" style="width:234px;height:84px;background:#1f7a4d;border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font:600 15px system-ui">RENDERED</div></foreignObject></svg></div></td></tr>
+
+<tr><td class="k">P</td>
+<td><div class="nm">SVG pattern fill</div>
+<div class="why">Vector shapes only, more complex than probe 1's row G.</div></td>
+<td class="out"><div class="slot"><svg width="240" height="90" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pp" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#1f7a4d"/><circle cx="5" cy="5" r="2" fill="#2f9a63"/></pattern></defs><rect width="240" height="90" fill="url(#pp)"/><rect x="4" y="4" width="232" height="82" fill="none" stroke="#fff" stroke-width="3"/><text x="120" y="52" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="600" text-anchor="middle">RENDERED</text></svg></div></td></tr>
+
+</table>
+
+<div id="csp"><b>Security policy report</b>
+collecting…</div>
+
+<div class="note"><strong>What to send me:</strong> which letters are green, plus the full text of the
+black panel. If <strong>L</strong> or <strong>M</strong> is green the existing slide images can be kept
+as-is and simply drawn differently. If only <strong>N/O/P</strong> are green, the slides have to be
+rebuilt as true vector artwork.</div>
+</div>
+
+<script>
+var VIOL = [];
+document.addEventListener('securitypolicyviolation', function(e){
+  VIOL.push({d:e.violatedDirective, u:String(e.blockedURI).slice(0,60), p:e.originalPolicy});
+});
+
+function bytes(b64){
+  var s = atob(b64), a = new Uint8Array(s.length);
+  for (var i=0;i<s.length;i++) a[i]=s.charCodeAt(i);
+  return a;
+}
+var JPGB64 = "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";
+var RAWB64 = "IHtOL4RaNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfL4RaIHtOMoVcyt/VttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFyt/VMoVcOYpitNLEHnlNIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOHnlNtNLEOYpiOYpistHCHHlMHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHHlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHHhKHHhKHHhLHHhLHXlMHHhKHHhLHHhKHHhLHHhKHHhKHHhLHHhLH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNPItkPIxkO4pjOopjLIJYP41nN4hgPItkOopjPItkPItkPItkOYpiH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNIXtPcKqNgbSbU5l3ea+UbqmMW559aqeJZaOFY6ODfbKYZKOEWZx7Vpt5L4NaHXlLH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNIXtPUZd0ZaOEW518TZVyaaaIW559WZx7YqKCUph1W519Y6ODWZ17U5l3JX5SHnlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlLHnlMIXtPHnlMHXlMIXtPHnpNIXtOH3pNHXlMIXtOIXtOIHtOHnpMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHXlMH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNH3pNHXlMstHCOYpiOYpistHCHHlMHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHnpNHHlMstHCOYpiOYpitNLEHnlNIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOIHpOHnlNtNLEOYpiMoVcyt/VttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFttTFyt/VMoVcIHtOL4RaNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfNodfL4RaIHtO";
+
+// L — createImageBitmap from a Blob, no URL anywhere
+try{
+  var blob = new Blob([bytes(JPGB64)], {type:'image/jpeg'});
+  if (window.createImageBitmap){
+    createImageBitmap(blob).then(function(bm){
+      document.getElementById('cL').getContext('2d').drawImage(bm,0,0);
+    }).catch(function(err){ note('L failed: '+err); });
+  } else note('L: createImageBitmap unsupported');
+}catch(e){ note('L threw: '+e); }
+
+// M — blob: URL through an Image element
+try{
+  var url = URL.createObjectURL(new Blob([bytes(JPGB64)],{type:'image/jpeg'}));
+  var im = new Image();
+  im.onload = function(){ document.getElementById('cM').getContext('2d').drawImage(im,0,0); };
+  im.onerror = function(){ note('M failed: image error on blob: URL'); };
+  im.src = url;
+}catch(e){ note('M threw: '+e); }
+
+// N — raw pixels, no image decode at all
+try{
+  var raw = bytes(RAWB64), w=60, h=23;
+  var c = document.getElementById('cN'), ctx = c.getContext('2d');
+  var id = ctx.createImageData(w,h);
+  for (var i=0,j=0;i<raw.length;i+=3,j+=4){
+    id.data[j]=raw[i]; id.data[j+1]=raw[i+1]; id.data[j+2]=raw[i+2]; id.data[j+3]=255;
+  }
+  var off = document.createElement('canvas'); off.width=w; off.height=h;
+  off.getContext('2d').putImageData(id,0,0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(off,0,0,w,h,0,0,240,90);
+}catch(e){ note('N threw: '+e); }
+
+var notes=[];
+function note(t){ notes.push(t); }
+
+setTimeout(function(){
+  var out = [];
+  out.push('user agent: ' + navigator.userAgent);
+  out.push('page origin: ' + location.origin);
+  out.push('');
+  if (VIOL.length){
+    out.push('CSP violations seen: ' + VIOL.length);
+    var seen = {};
+    VIOL.forEach(function(v){
+      if(!seen[v.d]){ seen[v.d]=1; out.push('  violated: ' + v.d + '   blocked: ' + v.u); }
+    });
+    out.push('');
+    out.push('FULL POLICY:');
+    out.push(VIOL[0].p || '(not exposed)');
+  } else {
+    out.push('No CSP violation events fired.');
+    out.push('If images were still blocked, the host is stripping or rewriting them');
+    out.push('server-side rather than using CSP.');
+  }
+  if (notes.length){ out.push(''); out.push('script notes:'); notes.forEach(function(n){ out.push('  '+n); }); }
+  var el = document.getElementById('csp');
+  el.textContent = '';
+  var b = document.createElement('b'); b.textContent='Security policy report';
+  el.appendChild(b); el.appendChild(document.createTextNode('\n' + out.join('\n')));
+}, 2500);
+</script>

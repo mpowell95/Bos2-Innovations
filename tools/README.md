@@ -76,3 +76,41 @@ DOM, so:
   directive and will fail identically. The images have to stop being data URIs:
   export true vector SVG from the source PPTX, or serve them from an allowed
   origin (row H says whether that is possible).
+
+## Probe 1 result (recorded 2026-09-01)
+
+    A img+data:PNG    BLOCKED     G true vector SVG  RENDERED
+    B img+data:WebP   BLOCKED     H external https   BLOCKED
+    C img+data:JPEG   BLOCKED     I inline <style>   RENDERED
+    D svg image href  BLOCKED     J inline <script>  RENDERED
+    E svg xlink:href  BLOCKED     K JS-injected img  BLOCKED
+    F css background  BLOCKED
+
+K blocked settles it. A server-side sanitizer cannot see DOM created by script,
+so a script-injected data URI would have survived one. It did not, which means
+the browser is refusing the image itself — a CSP img-src directive. D and E are
+blocked by that same directive, so wrapping rasters in inline SVG cannot work.
+
+H blocked as well, so images cannot be served from another origin either.
+G, I and J rendering means inline CSS, inline JS and true vector SVG all survive.
+
+---
+
+# hosting_probe2.html
+
+Follow-up probe. Every route in probe 1 that worked avoided loading an image
+from a URL, so this one tests whether the slide bitmaps can still be drawn
+without one, and reports the host's actual policy text.
+
+    L canvas + createImageBitmap(Blob)   native decode, no URL
+    M canvas + blob: URL
+    N canvas + putImageData              raw pixels, control case
+    O SVG foreignObject
+    P SVG pattern fill
+
+It also listens for `securitypolicyviolation` and prints the violated directive
+and full policy, which names exactly what the host permits.
+
+If L or M render, the existing WebP slides can stay as they are and only the
+drawing path changes. If only N/O/P render, the slides must be rebuilt as true
+vector artwork, which means going back to the source PPTX.
