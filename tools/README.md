@@ -114,3 +114,48 @@ and full policy, which names exactly what the host permits.
 If L or M render, the existing WebP slides can stay as they are and only the
 drawing path changes. If only N/O/P render, the slides must be rebuilt as true
 vector artwork, which means going back to the source PPTX.
+
+## Probe 2 result — the host's actual policy
+
+    default-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://esm.sh
+    script-src  'self' 'unsafe-inline' 'unsafe-eval' <cdns> blob:
+    style-src   'self' 'unsafe-inline'
+    connect-src https: data:
+    form-action 'none'
+
+    L createImageBitmap(Blob)  RENDERED      O foreignObject  RENDERED
+    M blob: URL                BLOCKED       P pattern fill   RENDERED
+    N putImageData             RENDERED
+
+There is no `img-src`, so images fall back to `default-src`, which allows neither
+`data:` nor `blob:` nor ceritypartners.com. That is the whole bug, and it covers
+both the 82 inlined slides and the 24 bio headshots loaded from the website.
+
+L rendering is the opening: `createImageBitmap()` on a Blob receives bytes
+directly and performs no fetch, so no fetch directive applies to it. M is blocked
+because it goes through a `blob:` URL, which `default-src` does not list.
+
+Note `connect-src https: data:` — `fetch()` to any https origin is permitted, and
+ceritypartners.com returns `access-control-allow-origin: *`, so bio photos could
+be fetched at runtime instead of inlined. They are inlined anyway so the toolkit
+does not depend on a live website during a client meeting.
+
+---
+
+# canvas_shim.py
+
+Rewrites the toolkit so every image is drawn into a `<canvas>` from bytes rather
+than loaded from a URL. See the module docstring for the mechanism.
+
+    python3 tools/canvas_shim.py IN.html OUT.html --bios bios_b64.json
+
+# cspserve.py
+
+Serves the current directory with the host's exact CSP header on port 8899, so
+changes can be verified against the real policy locally instead of by uploading.
+
+    python3 tools/cspserve.py
+
+Verified this way: the pre-shim file produces 82 "Refused to load the image"
+errors, and the shimmed file produces zero, with 82/82 slide canvases and 4/4
+sampled bio photos painted, lightbox and builder thumbnails working, no JS errors.
