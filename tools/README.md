@@ -202,3 +202,26 @@ only the encoder setting — and the lightbox paints the full 1500x1125 at 2x.
 Headroom is now 0.44M. To buy more room, the two `data:application/pdf` download
 links are 1.55M and are unlikely to work under this CSP anyway; dropping or
 externalising them is the cheapest source of space.
+
+## Embedded PDFs replaced with links
+
+Eight of the ten documents in the resources table were already SharePoint links;
+two were embedded as `data:application/pdf` payloads costing 1.55M characters.
+Those two were also the least likely to work once hosted, since the CSP does not
+allow `data:` and browsers block top-level navigation to a data: URL anyway.
+
+`externalize_pdfs.py` swaps them for ordinary links, matching how the other eight
+are handled. The label changes from "Download PDF" to "Open PDF", which is what
+now happens.
+
+    python3 tools/externalize_pdfs.py IN.html OUT.html \
+        --link Initial-Wealth-Forecast-Plan-Preparation.pdf=<url> \
+        --link Add-Accounts-Guide.pdf=<url>
+
+Both now point at ceritypartners.box.com. File is 13.01M, 1.99M under the limit.
+
+## Build order
+
+    shrink_toolkit.py    original -> re-encoded images and PDFs
+    externalize_pdfs.py  embedded PDFs -> links
+    canvas_shim.py       <img> -> <canvas>, bio photos inlined
