@@ -29,9 +29,13 @@ Usage:
 """
 
 import argparse
+import base64
+import io
 import json
 import re
 import sys
+
+from PIL import Image
 
 IMG_TAG = re.compile(r"<img\b[^>]*?>", re.S)
 DATA_URI = re.compile(r"data:image/([a-z+]+);base64,([A-Za-z0-9+/=]+)")
@@ -46,9 +50,13 @@ def attr(tag, name):
 
 def build_assets(html, bios_path):
     """Collect every image into one indexed table, and note the bio URL order."""
-    assets = []  # list of (mime, b64)
+    def sized(mime, b64):
+        w, h = Image.open(io.BytesIO(base64.b64decode(b64 + "=="))).size
+        return (mime, b64, w, h)
+
+    assets = []  # list of (mime, b64, natural width, natural height)
     for m in DATA_URI.finditer(html):
-        assets.append((m.group(1), m.group(2)))
+        assets.append(sized(m.group(1), m.group(2)))
 
     bio_urls = re.findall(r'data-photo="([^"]+)"', html)
     if bios_path:
@@ -59,7 +67,7 @@ def build_assets(html, bios_path):
                 f"but {len(bios)} encoded photos"
             )
         for b in bios:
-            assets.append(("webp", b))
+            assets.append(sized("webp", b))
     return assets, bio_urls
 
 
@@ -129,6 +137,26 @@ if(imgEl) return '<canvas class="cimg" data-i="'+imgEl.dataset.i+'" role="img" a
 BIO_OLD = """const img = photo ? '<img src="'+photo+'" alt="'+name+'" loading="eager" onerror="this.outerHTML=\\'<div class=&quot;initials&quot;>'+initialsOf(name)+'</div>\\'">'"""
 BIO_NEW = """const img = photo ? '<canvas class="cimg" data-i="'+photo+'" data-fb="'+initialsOf(name)+'" role="img" aria-label="'+name+'"></canvas>'"""
 
+# Two contexts sized an <img> from the image's own dimensions rather than from
+# CSS: the lightbox and the presenting stage. A canvas has no size until it is
+# painted, and it is painted to fit the box it is in, so those two collapse to
+# the small size they started at. Give them a definite box built from the real
+# aspect ratio the loader publishes as --ar.
+SIZING_CSS = """
+#slideLightbox .lightbox-img-wrap canvas.cimg{
+aspect-ratio:var(--ar, 4 / 3);
+width:auto; height:calc(100vh - 140px);
+max-width:100%; max-height:calc(100vh - 140px);
+object-fit:contain;
+}
+.ppt-slide-card.presenting canvas.cimg{
+aspect-ratio:var(--ar, 4 / 3);
+width:auto; height:100%;
+max-width:100%; max-height:100%;
+object-fit:contain;
+}
+"""
+
 LOADER = r"""
 <script>
 // ---------------------------------------------------------------------------
@@ -196,6 +224,11 @@ LOADER = r"""
   function hook(el){
     if (el._hooked) return;
     el._hooked = true;
+    // A canvas has no intrinsic size until it is painted, so contexts that size
+    // an image from the image itself (the lightbox, the presenting stage) have
+    // nothing to work from. Publish the real ratio for the stylesheet to use.
+    var a0 = A[+el.dataset.i];
+    if (a0 && a0.w && a0.h) el.style.setProperty('--ar', a0.w + ' / ' + a0.h);
     if (io) io.observe(el); else paint(el);
     if (ro) ro.observe(el);
   }
@@ -230,7 +263,7 @@ def main():
     before = len(html)
 
     assets, bio_urls = build_assets(html, args.bios)
-    index_of = {b64: i for i, (mime, b64) in enumerate(assets)}
+    index_of = {a[1]: i for i, a in enumerate(assets)}
     print(f"assets: {len(assets)} ({len(assets) - len(bio_urls)} slides + {len(bio_urls)} bios)")
 
     html, n_img = replace_img_tags(html, index_of)
@@ -246,6 +279,9 @@ def main():
     html, n_css = mirror_css(html)
     print(f"css rules mirrored onto canvas.cimg: {n_css}")
 
+    # Appended last so it wins over the mirrored intrinsic-sizing rules.
+    html = html.replace("</style>", SIZING_CSS + "</style>", 1)
+
     applied = 0
     for old, new in JS_PATCHES:
         if old not in html:
@@ -258,7 +294,10 @@ def main():
     applied += 1
     print(f"js fragments patched: {applied}")
 
-    payload = json.dumps([{"m": m, "d": d} for m, d in assets], separators=(",", ":"))
+    payload = json.dumps(
+        [{"m": m, "d": d, "w": w, "h": h} for m, d, w, h in assets],
+        separators=(",", ":"),
+    )
     block = '<script>window.__IMG_ASSETS__=' + payload + ';</script>' + LOADER
     html = html.replace("</body>", block + "\n</body>", 1)
 

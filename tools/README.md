@@ -159,3 +159,25 @@ changes can be verified against the real policy locally instead of by uploading.
 Verified this way: the pre-shim file produces 82 "Refused to load the image"
 errors, and the shimmed file produces zero, with 82/82 slide canvases and 4/4
 sampled bio photos painted, lightbox and builder thumbnails working, no JS errors.
+
+## Enlarging: intrinsic sizing
+
+Two places sized the image from the image itself rather than from CSS:
+
+    #slideLightbox .lightbox-img-wrap img { max-width:100%; max-height:calc(100vh - 140px) }
+    .ppt-slide-card.presenting img        { width:auto; height:auto; max-width:100%; max-height:100% }
+
+Neither sets a width or height, so an `<img>` lays out at its natural size and is
+then capped. A canvas has no natural size — it is exactly the resolution it was
+painted at, and it is painted to fit the box it is in, so both contexts settled
+at the small size they started from. The lightbox opened but barely grew, and the
+presenting stage had the same fault.
+
+The loader now publishes each image's real ratio as `--ar`, and SIZING_CSS gives
+those two contexts a definite box built from it. Everywhere else already sets an
+explicit width and was unaffected.
+
+Checked against the original file, same slide, same viewport:
+
+    lightbox    original 1013x760   shimmed 1013x760
+    presenting  original 1031x773   shimmed 1031x773
