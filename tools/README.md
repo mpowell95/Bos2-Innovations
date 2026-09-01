@@ -181,3 +181,24 @@ Checked against the original file, same slide, same viewport:
 
     lightbox    original 1013x760   shimmed 1013x760
     presenting  original 1031x773   shimmed 1031x773
+
+## Quality
+
+Two things governed sharpness, only one of which costs bytes.
+
+Canvas downscaling defaults to `imageSmoothingQuality = 'low'`, which is visibly
+softer than how a browser scales an `<img>`. Setting it to `'high'` costs nothing
+and applies wherever an image is drawn smaller than its source — every grid tile.
+
+The rest is encoder quality. Measured, at method 6:
+
+    slides q80   8.66M      q85  10.35M      q88  11.68M
+    bios 700px q78 0.83M    1200px q84 2.43M
+
+Shipped: slides q85, headshots 1200px q84 RGBA, for 14.56M against the 15M cap.
+Slides stay at their native 1500x1125 throughout — resolution was never reduced,
+only the encoder setting — and the lightbox paints the full 1500x1125 at 2x.
+
+Headroom is now 0.44M. To buy more room, the two `data:application/pdf` download
+links are 1.55M and are unlikely to work under this CSP anyway; dropping or
+externalising them is the cheapest source of space.

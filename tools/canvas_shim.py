@@ -213,7 +213,12 @@ LOADER = r"""
         var s = Math.min(1, want / bm.width);
         var w = Math.max(1, Math.round(bm.width * s)), h = Math.max(1, Math.round(bm.height * s));
         el.width = w; el.height = h;
-        el.getContext('2d').drawImage(bm, 0, 0, w, h);
+        var ctx = el.getContext('2d');
+        // Downscaling a 1500px slide into a tile uses the default 'low' resampler
+        // otherwise, which is visibly softer than how the browser scales an <img>.
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(bm, 0, 0, w, h);
         if (bm.close) bm.close();
         el._busy = false;
       })
