@@ -193,7 +193,16 @@ LOADER = r"""
     if (!a) return;
     var box = el.getBoundingClientRect();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var want = Math.min(MAXW, Math.max(64, Math.round((box.width || 320) * dpr)));
+    var bw = box.width || 320, bh = box.height || 240;
+    // object-fit decides how much of the source actually lands in the box. A
+    // landscape headshot cover-cropped into a portrait slot needs far more
+    // pixels than the box is wide; sizing from box width alone renders it soft.
+    var fit = (getComputedStyle(el).objectFit || 'fill');
+    var rw = bw / a.w, rh = bh / a.h;
+    var s = (fit === 'cover') ? Math.max(rw, rh)
+          : (fit === 'contain' || fit === 'scale-down') ? Math.min(rw, rh)
+          : rw;
+    var want = Math.min(a.w, MAXW, Math.max(64, Math.ceil(a.w * s * dpr)));
     // Repaint only when meaningfully larger than what is already drawn.
     if (el._w && el._w >= want * 0.85) return;
     el._w = want;
