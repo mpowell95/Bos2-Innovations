@@ -277,3 +277,41 @@ Three faults showed up in the first real export:
     closed <details>, which contributes no height even though the presenting CSS
     displays the body. Every <details> is opened on the clone before capture —
     this was omitting required disclosure text from every PDF.
+
+---
+
+# audit_sections.py
+
+Hunts for content that exists in the file but never reaches a presentation or a
+PDF — the class of fault the disclosures section had, where required text was
+dropped silently with nothing failing and nothing logged.
+
+    python3 tools/cspserve.py &
+    python3 tools/audit_sections.py http://127.0.0.1:8899/Toolkit.html
+
+## Audit results (this build)
+
+Only one section flags, and it is correct: `sec-contact` hides 16,247 characters
+in `#bioStore`, the data store the bio cards are generated from.
+
+Everything else is clean. The short renders on sec-wealthplanning, familyoffice,
+foundations, invmgmt, onboard and whycerity are expected: those are
+`data-gallery-only`, so `expandForPresentation` never emits the section itself,
+only the individual slides chosen from it.
+
+Checks that came back clean: no duplicate element ids, no clipped containers, no
+malformed links (29 links, all http/mailto), no 404s, no console errors during a
+full click-through, and the fee calculator is arithmetically correct
+($2M → 1.00%/$20,000; $5M → 0.90%/$45,000; $15M → 0.72%/$107,500).
+
+## Open bug, not fixed
+
+Ticking only gallery-only sections and choosing no slides from them launches a
+presentation containing nothing but the title page and the disclosure, with no
+warning. The "On Deck" list shows those sections as included, so the builder
+says one thing and the presentation does another. `launchBtn` only guards
+`presentationOrder.length === 0`, which is non-empty here.
+
+The fix is to check what `expandForPresentation` actually returns, and warn
+naming the sections that contributed no slides. Left alone because it changes
+presentation behaviour rather than export behaviour.
