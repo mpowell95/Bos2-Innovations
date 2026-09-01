@@ -48,3 +48,31 @@ All 82 images load, both PDF links intact, no JS errors, text stays crisp.
 
 WebP needs a reasonably modern browser (Safari 14+, 2020 and later). Fine for
 every current browser; worth knowing if a client is on something ancient.
+
+---
+
+# hosting_probe.html
+
+A ~17KB diagnostic page. Upload it to the artifact host and read the right-hand
+column: each row renders a green box if that technique survives, or stays a red
+hatched box if it does not.
+
+It exists because artifacts.ceritypartners.com sits behind Microsoft Entra auth
+and returns 401 to anything unauthenticated, so its CSP and sanitizer behaviour
+cannot be inspected remotely. The probe answers the question from the inside.
+
+Rows A-C are data-URI `<img>` in PNG / WebP / JPEG. D and E wrap the same base64
+in an inline `<svg><image>`. F routes it through CSS. G is true vector SVG with
+no data URI. H is an external https image. I and J check inline CSS and JS. K
+injects a data URI with JavaScript after load.
+
+**K is the decisive row.** A server-side HTML sanitizer never sees script-created
+DOM, so:
+
+- K green, A red -> upload-time markup filtering. Wrapping images in inline SVG
+  (D/E) or CSS (F) is worth trying.
+- K red, A red -> the browser is refusing `data:` images, almost certainly a CSP
+  `img-src` directive. SVG `<image href="data:...">` is governed by that same
+  directive and will fail identically. The images have to stop being data URIs:
+  export true vector SVG from the source PPTX, or serve them from an allowed
+  origin (row H says whether that is possible).

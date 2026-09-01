@@ -1,0 +1,97 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Image hosting probe</title>
+<style>
+body{font:15px/1.5 system-ui,sans-serif;margin:0;padding:28px;background:#f4f2ee;color:#1e2a38}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:22px;margin:0 0 6px}
+p.lead{margin:0 0 22px;color:#4a5a6a}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+th{background:#263547;color:#fff;text-align:left;padding:10px 14px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+td{border-top:1px solid #e3e0da;padding:14px;vertical-align:middle}
+td.k{font-weight:700;font-size:17px;width:38px;color:#263547}
+.nm{font-weight:600}
+.why{color:#6b7885;font-size:13px;margin-top:3px}
+td.out{width:262px}
+.slot{position:relative;min-height:90px;display:flex;align-items:center;justify-content:center;
+background:repeating-linear-gradient(45deg,#f6dede,#f6dede 8px,#fbeaea 8px,#fbeaea 16px);
+border:1px dashed #c98b8b;border-radius:4px;color:#a33;font-size:12px;font-weight:600}
+.slot::before{content:"BLOCKED";position:absolute;opacity:.55}
+.slot>*{position:relative;z-index:1}
+.probe-style-test{width:240px;height:90px;background:#1f7a4d;border:3px solid #fff;
+box-shadow:inset 0 0 0 1px #1f7a4d;display:flex;align-items:center;justify-content:center}
+.probe-style-test::after{content:"RENDERED";color:#fff;font-weight:600}
+.note{margin-top:22px;padding:14px 16px;background:#fff;border-left:4px solid #263547;border-radius:4px;font-size:14px}
+</style>
+<div class="wrap">
+<h1>Image hosting probe</h1>
+<p class="lead">Upload this to artifacts.ceritypartners.com and look at the right-hand column.
+A green <strong>RENDERED</strong> box means that technique survives the host.
+A red hatched <strong>BLOCKED</strong> box means it does not. Tell me which letters are green.</p>
+<table>
+<tr><th></th><th>Technique</th><th>Result</th></tr>
+<tr>
+<td class="k">A</td>
+<td><div class="nm">img + data: PNG</div><div class="why">What the toolkit uses now (as PNG)</div></td>
+<td class="out"><div class="slot"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABaCAIAAAAJsExNAAADJElEQVR4nO3dS0gUcQDH8ZndUbKioIiMBB898GKvUwl1yaiLHSJQhKCgQ4c6JF3Ugh5UeLHHxQ57CA9WsEUERZkdMjQzsFJDN9I1K+hxL9HV7TAxbPrfbV0X1N9+P6fd/8z8/yt8Gf64sGPn15ZbgArfXH8AIJ0IGlIIGlKc2DfDFx/M1ecAUlZQt997zR0aUggaUhzjaOw9HJifjDtk7tCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQYv453WQMnA2++/LBtu0l2TnnHwVehfvcEffo0/6uQPv90Lngm8+hykCdO9h75nbJhUrv2qgVzfJn3Xr9JNj9zBuMvTyZJYxTIWOlHvT4RKQiUGtZVvHq/KsVp/ZdP+GNeMYiEb/Pv72wpDPca7x2cfaiwKHTv8dGH/a1T788mSWMU6X8R2GhS8OWI/RjJHfZinhHr7Q2V5dVxTv6a2z08uObR0r/8/vqiZeY0VTQloagd67f2jHYE+9ox1CPZVk7ikrindD/LVywcs1slpjRVNCW+pYjy+/cOXrJ8TvrVq3dc+24N+IerW9p6h4ZcF83tDZXl1W9HKoxfwKff3wiYrw8+SWmTIWMlYY99LFdBw5u2934PDh9g+vqDPdORidLizYZ59mctzH0/VPshCksMWUqZKw0bDlefHy7JW9D4nMaWptPmnbSy3OW1uw9fKPt3uyXSHIqaEv9Du0Z+vm1OLfQZ9ux+4HukYH6libvnK7h9+MTkWzn73LumVEr6vicxra77v9AElyeYAnjVMhYdn5tuffGe04Wj3XD/GfMlW8KIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIcX8FCzvcSzAwsIdGlIIGlL+eU4hsNBxh4YUgoYUgoaUP+KXQ377WWU6AAAAAElFTkSuQmCC" alt=""></div></td>
+</tr><tr>
+<td class="k">B</td>
+<td><div class="nm">img + data: WebP</div><div class="why">What the optimized toolkit uses now</div></td>
+<td class="out"><div class="slot"><img src="data:image/webp;base64,UklGRuoCAABXRUJQVlA4IN4CAABQEwCdASrwAFoAPm00l0gkIyIhIXgLiIANiWVu4XNAttUmG/PVaYBvNrgDMDeMzwgDx5inv995R/m32Bf1H/WLsm+joCCR8RnoMd5QRnb+FdbsQTaF/c82t0CHxD4h8Q6fASK07aJR7Ph+eLzblMNdeq7IeJajg0EC31b6rEksIwYrPCBg/Kbr0yc9OenPN9uEeGqmAGdv4V1uxBN5DIGtgl0AAP7r0F/5T3X7+UlBLxrXY686xL/+8MzO90l+t9b/Bt8/g3+rwDPv6G/X3DP+YTwS+tHT+8iYMbrVl/IQL4wNjf1S1WzvfMLRwEg/W3zG5pzKPhjap+a35ff1GHjMfK94AAAAAAHEbaHxbrZk0CTKYzXfLPAZJL7szqtf+9R7/2T3zJmZLdRzT5SH1o02pSA3qAyYy2p66GhLmRY/0heJ+0Z+kQ+na/Wvgzxd099uDVXgsDkjW3V567N5/PUdPgYwTcARnKCUPpxtP0XcE8i68I3+brQc1mu5aVqEFfwvF87P5cv4VdFdy3HrvB5CuNs1VmFISR8uIXzOtv+dpe55w0uOPMW33n/UxXqJ3chVPvgl/maKH8deT0+PUxvnuQYX+t3wEm9qW9ZnPydOocdP4i9c2GDieaKwmYAE5NSfRniatYoXFka839+vl1jgLBCcroaVF4LYYKr/r1K9OcoU5ho/PmAHfH4czVB2S2E8rOuJ4OcoLB98FKEgB/WVl44sjW9tG/KunbOLdWrBtBX5pFc2jVBs+Ono7G/RkqkoAPl22bKss1+tt7gcF+ge4g91yZgI5xPwb7kqcnd/N//uFNCBha582i2z70YFlKYz3n/FqdXi0FVcV0AAiAHwt8ReHDzZQAu6EAACzy32wjKpMgo2G73/8A7T0CLlYJwdKea/eT4/wSPvZ/70OKfX9CJ+WnXPimgJQqGycKWL1PPWyHCFG8JvZ/icfbd/cggRnxChvrsV6HP+7I74AA==" alt=""></div></td>
+</tr><tr>
+<td class="k">C</td>
+<td><div class="nm">img + data: JPEG</div><div class="why">Original format, in case the block is format-specific</div></td>
+<td class="out"><div class="slot"><img src="data:image/jpeg;base64,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" alt=""></div></td>
+</tr><tr>
+<td class="k">D</td>
+<td><div class="nm">SVG &lt;image href&gt; + data:</div><div class="why">THE PROPOSED FIX — raster wrapped in inline SVG</div></td>
+<td class="out"><div class="slot"><svg width="240" height="90" xmlns="http://www.w3.org/2000/svg"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABaCAIAAAAJsExNAAADJElEQVR4nO3dS0gUcQDH8ZndUbKioIiMBB898GKvUwl1yaiLHSJQhKCgQ4c6JF3Ugh5UeLHHxQ57CA9WsEUERZkdMjQzsFJDN9I1K+hxL9HV7TAxbPrfbV0X1N9+P6fd/8z8/yt8Gf64sGPn15ZbgArfXH8AIJ0IGlIIGlKc2DfDFx/M1ecAUlZQt997zR0aUggaUhzjaOw9HJifjDtk7tCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQYv453WQMnA2++/LBtu0l2TnnHwVehfvcEffo0/6uQPv90Lngm8+hykCdO9h75nbJhUrv2qgVzfJn3Xr9JNj9zBuMvTyZJYxTIWOlHvT4RKQiUGtZVvHq/KsVp/ZdP+GNeMYiEb/Pv72wpDPca7x2cfaiwKHTv8dGH/a1T788mSWMU6X8R2GhS8OWI/RjJHfZinhHr7Q2V5dVxTv6a2z08uObR0r/8/vqiZeY0VTQloagd67f2jHYE+9ox1CPZVk7ikrindD/LVywcs1slpjRVNCW+pYjy+/cOXrJ8TvrVq3dc+24N+IerW9p6h4ZcF83tDZXl1W9HKoxfwKff3wiYrw8+SWmTIWMlYY99LFdBw5u2934PDh9g+vqDPdORidLizYZ59mctzH0/VPshCksMWUqZKw0bDlefHy7JW9D4nMaWptPmnbSy3OW1uw9fKPt3uyXSHIqaEv9Du0Z+vm1OLfQZ9ux+4HukYH6libvnK7h9+MTkWzn73LumVEr6vicxra77v9AElyeYAnjVMhYdn5tuffGe04Wj3XD/GfMlW8KIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIcX8FCzvcSzAwsIdGlIIGlL+eU4hsNBxh4YUgoYUgoaUP+KXQ377WWU6AAAAAElFTkSuQmCC" width="240" height="90"/></svg></div></td>
+</tr><tr>
+<td class="k">E</td>
+<td><div class="nm">SVG &lt;image xlink:href&gt; + data:</div><div class="why">Same, older attribute some sanitizers miss</div></td>
+<td class="out"><div class="slot"><svg width="240" height="90" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABaCAIAAAAJsExNAAADJElEQVR4nO3dS0gUcQDH8ZndUbKioIiMBB898GKvUwl1yaiLHSJQhKCgQ4c6JF3Ugh5UeLHHxQ57CA9WsEUERZkdMjQzsFJDN9I1K+hxL9HV7TAxbPrfbV0X1N9+P6fd/8z8/yt8Gf64sGPn15ZbgArfXH8AIJ0IGlIIGlKc2DfDFx/M1ecAUlZQt997zR0aUggaUhzjaOw9HJifjDtk7tCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQYv453WQMnA2++/LBtu0l2TnnHwVehfvcEffo0/6uQPv90Lngm8+hykCdO9h75nbJhUrv2qgVzfJn3Xr9JNj9zBuMvTyZJYxTIWOlHvT4RKQiUGtZVvHq/KsVp/ZdP+GNeMYiEb/Pv72wpDPca7x2cfaiwKHTv8dGH/a1T788mSWMU6X8R2GhS8OWI/RjJHfZinhHr7Q2V5dVxTv6a2z08uObR0r/8/vqiZeY0VTQloagd67f2jHYE+9ox1CPZVk7ikrindD/LVywcs1slpjRVNCW+pYjy+/cOXrJ8TvrVq3dc+24N+IerW9p6h4ZcF83tDZXl1W9HKoxfwKff3wiYrw8+SWmTIWMlYY99LFdBw5u2934PDh9g+vqDPdORidLizYZ59mctzH0/VPshCksMWUqZKw0bDlefHy7JW9D4nMaWptPmnbSy3OW1uw9fKPt3uyXSHIqaEv9Du0Z+vm1OLfQZ9ux+4HukYH6libvnK7h9+MTkWzn73LumVEr6vicxra77v9AElyeYAnjVMhYdn5tuffGe04Wj3XD/GfMlW8KIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIcX8FCzvcSzAwsIdGlIIGlL+eU4hsNBxh4YUgoYUgoaUP+KXQ377WWU6AAAAAElFTkSuQmCC" width="240" height="90"/></svg></div></td>
+</tr><tr>
+<td class="k">F</td>
+<td><div class="nm">CSS background-image + data:</div><div class="why">Data URI via stylesheet instead of markup</div></td>
+<td class="out"><div class="slot"><div style="width:240px;height:90px;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABaCAIAAAAJsExNAAADJElEQVR4nO3dS0gUcQDH8ZndUbKioIiMBB898GKvUwl1yaiLHSJQhKCgQ4c6JF3Ugh5UeLHHxQ57CA9WsEUERZkdMjQzsFJDN9I1K+hxL9HV7TAxbPrfbV0X1N9+P6fd/8z8/yt8Gf64sGPn15ZbgArfXH8AIJ0IGlIIGlKc2DfDFx/M1ecAUlZQt997zR0aUggaUhzjaOw9HJifjDtk7tCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQYv453WQMnA2++/LBtu0l2TnnHwVehfvcEffo0/6uQPv90Lngm8+hykCdO9h75nbJhUrv2qgVzfJn3Xr9JNj9zBuMvTyZJYxTIWOlHvT4RKQiUGtZVvHq/KsVp/ZdP+GNeMYiEb/Pv72wpDPca7x2cfaiwKHTv8dGH/a1T788mSWMU6X8R2GhS8OWI/RjJHfZinhHr7Q2V5dVxTv6a2z08uObR0r/8/vqiZeY0VTQloagd67f2jHYE+9ox1CPZVk7ikrindD/LVywcs1slpjRVNCW+pYjy+/cOXrJ8TvrVq3dc+24N+IerW9p6h4ZcF83tDZXl1W9HKoxfwKff3wiYrw8+SWmTIWMlYY99LFdBw5u2934PDh9g+vqDPdORidLizYZ59mctzH0/VPshCksMWUqZKw0bDlefHy7JW9D4nMaWptPmnbSy3OW1uw9fKPt3uyXSHIqaEv9Du0Z+vm1OLfQZ9ux+4HukYH6libvnK7h9+MTkWzn73LumVEr6vicxra77v9AElyeYAnjVMhYdn5tuffGe04Wj3XD/GfMlW8KIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIcX8FCzvcSzAwsIdGlIIGlL+eU4hsNBxh4YUgoYUgoaUP+KXQ377WWU6AAAAAElFTkSuQmCC)"></div></div></td>
+</tr><tr>
+<td class="k">G</td>
+<td><div class="nm">True vector SVG (no data URI)</div><div class="why">Real shapes and text — the only guaranteed-safe route</div></td>
+<td class="out"><div class="slot"><svg width="240" height="90" xmlns="http://www.w3.org/2000/svg"><rect width="240" height="90" fill="#1f7a4d"/><rect x="4" y="4" width="232" height="82" fill="none" stroke="#fff" stroke-width="3"/><text x="120" y="52" fill="#fff" font-family="sans-serif" font-size="17" text-anchor="middle">RENDERED</text></svg></div></td>
+</tr><tr>
+<td class="k">H</td>
+<td><div class="nm">External https image</div><div class="why">Can the page load images from another origin at all?</div></td>
+<td class="out"><div class="slot"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/240px-PNG_transparency_demonstration_1.png" alt="" style="height:90px"></div></td>
+</tr><tr>
+<td class="k">I</td>
+<td><div class="nm">Inline &lt;style&gt; block</div><div class="why">Does the host keep inline CSS at all?</div></td>
+<td class="out"><div class="slot"><div class="probe-style-test"></div></div></td>
+</tr><tr>
+<td class="k">J</td>
+<td><div class="nm">Inline &lt;script&gt;</div><div class="why">Does JS run? (the Build-a-Presentation tab needs this)</div></td>
+<td class="out"><div class="slot"><div id="js-probe"></div></div></td>
+</tr>
+<tr>
+<td class="k">K</td>
+<td><div class="nm">JS-injected img + data:</div><div class="why">THE DIAGNOSTIC — same data URI, but written by script after load</div></td>
+<td class="out"><div class="slot"><div id="js-img-probe"></div></div></td>
+</tr>
+</table>
+<div class="note"><strong>Rows D and K are the ones that matter.</strong> It is the proposed fix — the same
+base64 image, just wrapped in an inline &lt;svg&gt;. If D is red like A/B/C, the host is blocking the
+<code>data:</code> scheme itself and wrapping it in SVG cannot help. If D is green, the host is only filtering <code>&lt;img src&gt;</code> and the fix works.
+<br><br><strong>Row K tells us which.</strong> It injects the identical data URI with JavaScript, after the page
+loads, so a server-side HTML filter never sees it. If K is green but A is red, the host is stripping markup
+on upload and rows D/E/F are worth trying. If K is red too, the browser itself is refusing
+<code>data:</code> images and no amount of rewriting will help — the slides have to stop being data URIs
+altogether.</div>
+</div>
+<script>
+var j=document.getElementById('js-probe');
+j.textContent='RENDERED';
+j.style.cssText='width:240px;height:90px;background:#1f7a4d;border:3px solid #fff;'+
+'display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600';
+
+var kp=document.getElementById('js-img-probe');
+if(kp){var im=new Image();im.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABaCAIAAAAJsExNAAADJElEQVR4nO3dS0gUcQDH8ZndUbKioIiMBB898GKvUwl1yaiLHSJQhKCgQ4c6JF3Ugh5UeLHHxQ57CA9WsEUERZkdMjQzsFJDN9I1K+hxL9HV7TAxbPrfbV0X1N9+P6fd/8z8/yt8Gf64sGPn15ZbgArfXH8AIJ0IGlIIGlKc2DfDFx/M1ecAUlZQt997zR0aUggaUhzjaOw9HJifjDtk7tCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQQtCQYv453WQMnA2++/LBtu0l2TnnHwVehfvcEffo0/6uQPv90Lngm8+hykCdO9h75nbJhUrv2qgVzfJn3Xr9JNj9zBuMvTyZJYxTIWOlHvT4RKQiUGtZVvHq/KsVp/ZdP+GNeMYiEb/Pv72wpDPca7x2cfaiwKHTv8dGH/a1T788mSWMU6X8R2GhS8OWI/RjJHfZinhHr7Q2V5dVxTv6a2z08uObR0r/8/vqiZeY0VTQloagd67f2jHYE+9ox1CPZVk7ikrindD/LVywcs1slpjRVNCW+pYjy+/cOXrJ8TvrVq3dc+24N+IerW9p6h4ZcF83tDZXl1W9HKoxfwKff3wiYrw8+SWmTIWMlYY99LFdBw5u2934PDh9g+vqDPdORidLizYZ59mctzH0/VPshCksMWUqZKw0bDlefHy7JW9D4nMaWptPmnbSy3OW1uw9fKPt3uyXSHIqaEv9Du0Z+vm1OLfQZ9ux+4HukYH6libvnK7h9+MTkWzn73LumVEr6vicxra77v9AElyeYAnjVMhYdn5tuffGe04Wj3XD/GfMlW8KIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIYWgIcX8FCzvcSzAwsIdGlIIGlL+eU4hsNBxh4YUgoYUgoaUP+KXQ377WWU6AAAAAElFTkSuQmCC';kp.appendChild(im);}
+</script>
