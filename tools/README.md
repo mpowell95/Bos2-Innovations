@@ -262,3 +262,18 @@ Three CSP details drove the implementation:
 Verified under the host policy: the button downloads a valid PDF, slide pages
 carry 1500x1125 images, the logo renders, bio pages break between cards, and no
 CSP refusal names a logo.
+
+## PDF layout corrections
+
+Three faults showed up in the first real export:
+
+  * Text sections were captured at 1400px while the presenting view constrains
+    content to ~1050px and applies zoom:1.35. Text therefore came out small and
+    sat in the top half of the page. The stage is now 1040px wide.
+  * Content was pinned to the top-left corner with no margin. Sections that fit
+    on one page are now centred inside a 30pt margin; sliced pages use the same
+    margin. Slides remain full bleed.
+  * The disclosures section rendered as a bare heading. Its body lives in a
+    closed <details>, which contributes no height even though the presenting CSS
+    displays the body. Every <details> is opened on the clone before capture —
+    this was omitting required disclosure text from every PDF.

@@ -63,7 +63,7 @@ STYLE = """
 <style>
 /* Sam's own print rules, re-scoped so they apply to the off-screen export
    stage. @media print does not apply to an html2canvas render. */
-#pdfStage{position:fixed; left:-12000px; top:0; width:1400px; background:#fff; z-index:-1;}
+#pdfStage{position:fixed; left:-12000px; top:0; width:1040px; background:#fff; z-index:-1;}
 #pdfStage .print-page{page-break-before:auto; background:#fff;}
 __PRINT_RULES__
 #pdfBusy{position:fixed; inset:0; z-index:5000; display:none; align-items:center; justify-content:center;
@@ -89,6 +89,8 @@ SCRIPT = r"""
   if (!btn) return;
 
   var PT_W = 720, PT_H = 540;           // 10 x 7.5in at 72pt/in — 4:3
+  var MARGIN = 30;                      // text pages only; slides stay full bleed
+  var AV_W = PT_W - MARGIN * 2, AV_H = PT_H - MARGIN * 2;
   var A = window.__IMG_ASSETS__ || [];
 
   function bytes(b64){
@@ -296,6 +298,10 @@ SCRIPT = r"""
       stage.innerHTML = '';
       var clone = src.cloneNode(true);
       clone.classList.add('presenting');
+      // A closed <details> contributes no height, so the disclosures section
+      // came out as a bare heading. Presenting already hides the summary and
+      // shows the body, so opening them matches what is on screen.
+      [].forEach.call(clone.querySelectorAll('details'), function(d){ d.open = true; });
       var page = document.createElement('div');
       page.className = 'print-page';
       page.appendChild(clone);
@@ -318,26 +324,26 @@ SCRIPT = r"""
 
       var shot = await window.html2canvas(page, {
         scale: H2C_SCALE, backgroundColor: '#ffffff', logging: false,
-        windowWidth: 1400, useCORS: true
+        windowWidth: 1040, useCORS: true
       });
 
       shot = trimBottom(shot);
-      var slice = Math.round(shot.width * PT_H / PT_W);
 
-      // A section that only just overflows reads far better shrunk onto one
-      // page than sliced through the middle of a bio card.
-      if (shot.height <= slice * 1.3){
-        var sc = Math.min(PT_W / shot.width, PT_H / shot.height);
-        var dw = shot.width * sc, dh = shot.height * sc;
+      // Fit the whole section on one page when doing so keeps it readable,
+      // centred inside the margins rather than dumped against the top edge.
+      var fit = Math.min(AV_W / shot.width, AV_H / shot.height);
+      if (shot.width * fit >= AV_W * 0.55){
+        var dw = shot.width * fit, dh = shot.height * fit;
         if (!first) doc.addPage([PT_W, PT_H], 'landscape');
         first = false;
         doc.addImage(shot.toDataURL('image/jpeg', 0.92), 'JPEG',
-                     (PT_W - dw) / 2, 0, dw, dh);
+                     (PT_W - dw) / 2, (PT_H - dh) / 2, dw, dh);
         stage.innerHTML = '';
         continue;
       }
 
-      // Otherwise fit to width and slice down the page.
+      // Too tall to shrink: fit to the text width and slice down the page.
+      var slice = Math.round(shot.width * AV_H / AV_W);
       var y = 0;
       while (y < shot.height){
         var h = Math.min(slice, shot.height - y);
@@ -358,7 +364,7 @@ SCRIPT = r"""
         if (!first) doc.addPage([PT_W, PT_H], 'landscape');
         first = false;
         doc.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG',
-                     0, 0, PT_W, PT_W * h / shot.width);
+                     MARGIN, MARGIN, AV_W, AV_W * h / shot.width);
         y += h;
       }
       stage.innerHTML = '';
