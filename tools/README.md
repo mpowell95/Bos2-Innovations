@@ -225,3 +225,40 @@ Both now point at ceritypartners.box.com. File is 13.01M, 1.99M under the limit.
     shrink_toolkit.py    original -> re-encoded images and PDFs
     externalize_pdfs.py  embedded PDFs -> links
     canvas_shim.py       <img> -> <canvas>, bio photos inlined
+
+---
+
+# pdf_export.py
+
+Replaces window.print() on the presentation's button with a real PDF download.
+
+Printing hands the page to the browser's print engine, which re-flows it onto
+paper; that is why the output looked poor. This composes the PDF instead:
+
+  * Pages are 10 x 7.5in (720x540pt), the 4:3 slide size, so a slide fills the
+    page exactly with no margins.
+  * A slide page is drawn from its original 1500x1125 bitmap, never screen
+    scraped.
+  * Text sections are rendered with html2canvas, trimmed of trailing blank
+    space, and either shrunk onto one page or split at card boundaries rather
+    than through the middle of a bio.
+  * The file is named from the title-page fields:
+    "Cerity Partners - <client> - <date>.pdf".
+
+Three CSP details drove the implementation:
+
+  * jsPDF and html2canvas are embedded, not loaded from cdn.jsdelivr.net. The
+    policy does allow that CDN, but a corporate network blocking it would break
+    the button in front of a prospect. Costs ~0.58M characters.
+  * html2canvas rasterises inline SVG via a data: URL, which is blocked, so
+    logos vanished from the PDF. Chrome also cannot decode an SVG blob through
+    createImageBitmap. Every SVG here is paths and circles with at most one
+    transform, so they are drawn with Path2D instead.
+  * Any failure falls back to the original window.print() path.
+
+    python3 tools/pdf_export.py IN.html OUT.html \
+        --lib jspdf.min.js --lib html2canvas.min.js
+
+Verified under the host policy: the button downloads a valid PDF, slide pages
+carry 1500x1125 images, the logo renders, bio pages break between cards, and no
+CSP refusal names a logo.
