@@ -481,3 +481,55 @@ produced a currentSlides of exactly 7.
 Both hang off renderOrderList(), the one funnel every change already passes
 through. Listening for change events would have missed Select All and Clear,
 which set .checked directly and fire nothing.
+
+---
+
+# review_pass.py
+
+    python3 tools/review_pass.py IN.html OUT.html
+
+Applies a review of the built toolkit: twenty-odd copy cuts, two layout fixes
+and two behaviour fixes. Runs last in the pipeline, since most of what it edits
+is put there by the tools before it.
+
+The copy cuts are the bulk of it. The Library and the builder had accumulated a
+running commentary — that optional slides are optional, that the slide library
+is the slide library, that the Title Page is always included, that a published
+fee schedule should be checked against the published fee schedule. None of it
+told a reader anything the screen did not already show, and all of it competed
+with the content for attention.
+
+Two layout fixes:
+
+* `.section-sub` had `max-width:640px`, so roughly one paragraph in seven
+  stopped two thirds of the way across a column every other paragraph filled.
+  That reads as a mistake rather than as a measure.
+* The resources tables gave one column a fixed 30% and let the other two fight
+  over the rest, which squeezed "Open document" into a two-line stack whenever
+  a description ran long. Now `table-layout:fixed` with a reserved,
+  non-wrapping link column.
+
+Two behaviour fixes:
+
+* `buildChecklist()` rebuilds the section rows on every visit to the Build tab.
+  It restored the slide checkboxes from `selectedGallerySlides` but never the
+  section checkboxes, then recomputed `presentationOrder` from the resulting
+  empty set. A loaded template looked applied — its slides were checked — and
+  produced an empty deck. Sections now restore from `presentationOrder`, and
+  the rebuild appends to that order rather than replacing it, so a deck the
+  advisor dragged into shape survives a tab switch.
+* "Questions to Ask When Choosing an Advisor" is advisor prep; the Library page
+  says to think the questions through, not to present them. It sat in the
+  builder with nothing saying so, and now carries an "Advisor prep — not for
+  presenting" tag, in the same slot as the dense-content warning. Sections
+  declare their own tag through `data-buildtag`.
+
+Every edit asserts exactly one match before applying. In a 13M-char file made
+mostly of base64, a substring that quietly matches twice — or stops matching
+after an upstream tool changes a line — is the failure mode worth designing
+against, and it has bitten this pipeline before.
+
+Verified under the host's CSP: 82/82 images paint, no JS errors, the built-in
+template survives a Library/Build round trip with all six sections and 20
+slides intact, the deck total still reads 25 slides, and the PDF export is still
+25 pages.

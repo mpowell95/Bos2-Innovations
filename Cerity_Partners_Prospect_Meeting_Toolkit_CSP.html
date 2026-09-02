@@ -80,7 +80,7 @@ padding:9px 22px; border-left:3px solid transparent;
 .section-head .idx{ font-family:'Helvetica Neue', Arial, sans-serif; font-size:12px; color:var(--fiord-light);
 letter-spacing:.08em; border:1px solid var(--rule); border-radius:20px; padding:3px 10px; }
 .section-head h2{ font-size:25px; font-weight:400; margin:0; color:var(--cobalt); }
-.section-sub{ font-size:13.5px; color:var(--clay); max-width:640px; margin:-14px 0 24px; }
+.section-sub{ font-size:13.5px; color:var(--clay); margin:-14px 0 24px; }
 .subsection-head{ font-size:19px; font-weight:400; color:var(--cobalt); margin:44px 0 16px;
 padding-top:28px; border-top:1px solid var(--rule); }
 .content-block > .subsection-head:first-of-type{ margin-top:0; padding-top:0; border-top:none; }
@@ -439,8 +439,12 @@ width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify
 .materials{ width:100%; border-collapse:collapse; margin-top:10px; font-size:13px; }
 .materials th{ font-family:'Helvetica Neue', Arial, sans-serif; text-align:left; font-size:10.5px;
 text-transform:uppercase; letter-spacing:.05em; color:var(--clay); border-bottom:2px solid var(--cobalt); padding:8px 10px; }
-.materials td{ padding:12px 10px; border-bottom:1px solid var(--rule); color:#3d4a56; vertical-align:top; }
-.materials td.doc{ font-weight:600; color:var(--cobalt); width:30%; }
+.materials td{ padding:14px 16px; border-bottom:1px solid var(--rule); color:#3d4a56;
+vertical-align:top; line-height:1.55; }
+.materials td.doc{ font-weight:600; color:var(--cobalt); }
+.materials{ table-layout:fixed; }
+.materials th:first-child, .materials td:first-child{ width:26%; padding-left:0; }
+.materials th:last-child, .materials td:last-child{ width:150px; padding-right:0; white-space:nowrap; }
 .materials a{ color:var(--fiord); text-decoration:none; border-bottom:1px solid var(--fiord-light); }
 .materials .tag{ display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:.04em;
 padding:2px 8px; border-radius:20px; background:rgba(95,195,177,0.15); color:#2d7466; margin-left:6px; }
@@ -858,6 +862,32 @@ font-family:'Helvetica Neue', Arial, sans-serif; font-size:10.5px; font-weight:6
 letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 }
 .builder-item .tag.stale + .row-badge{ margin-left:8px; }
+
+/* Template actions: shaped buttons rather than a run of underlined links. */
+.tpl-row{ padding-right:26px; }
+.tpl-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.tplbtn{
+appearance:none; cursor:pointer; white-space:nowrap;
+font-family:'Helvetica Neue', Arial, sans-serif; font-size:12px; letter-spacing:.02em; line-height:1;
+padding:8px 14px; border-radius:20px;
+border:1px solid var(--rule); background:#fff; color:var(--fiord);
+transition:background .12s ease, color .12s ease, border-color .12s ease;
+}
+.tplbtn:hover{ border-color:var(--fiord-light); background:var(--vellum); }
+.tplbtn.primary{ background:var(--fiord); border-color:var(--fiord); color:#fff; }
+.tplbtn.primary:hover{ background:var(--cobalt); border-color:var(--cobalt); }
+.tplbtn.danger:hover{ background:#fdf5ef; border-color:#e3b48b; color:#a5471a; }
+.tplbtn:focus-visible{ outline:2px solid var(--tradewind); outline-offset:2px; }
+
+/* Advisor-prep sections carry the same weight, and sit in the same place, as
+   the dense-content ones. */
+.builder-item .tag.prep{ margin-left:auto; background:rgba(107,77,89,0.13); color:var(--plum);
+font-size:10px; padding:3px 9px; border-radius:20px; font-family:'Helvetica Neue', Arial, sans-serif; }
+.builder-item .tag.prep + .row-badge{ margin-left:8px; }
+
+/* A wrapped tag should sit flush under the title, not indented by the gap that
+   separates it from the title when they share a line. */
+.materials td.doc .tag{ margin-left:0; margin-right:6px; }
 </style>
 </head>
 <body>
@@ -952,8 +982,7 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 </table>
 </div>
 
-<h3 class="subsection-head">Additional Slides <span style="font-weight:400; font-size:13px; color:var(--clay);">(from the Cerity Partners Overview Slide Library)</span></h3>
-<p class="section-sub advisor-note">Everything in this section — Who We Are, Why Clients Choose Us, and 14 additional slides — is optional. Go to Build a Presentation to choose which ones to include; none are selected by default.</p>
+<h3 class="subsection-head">Additional Slides</h3>
 <div class="ppt-gallery">
 <div class="ppt-slide-card" id="s9" data-title="Our Defining Characteristics">
 <canvas class="cimg" data-i="1" role="img" aria-label="Our Defining Characteristics"></canvas>
@@ -1051,7 +1080,6 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 <section class="content-block" id="sec-wealthplanning" data-title="Wealth Planning Solutions" data-category="Firm &amp; Prospecting" data-gallery="true" data-gallery-only="true">
 <div class="section-head"><span class="idx">03</span><h2>Wealth Planning Solutions</h2></div>
 
-<p class="section-sub advisor-note">32 slides available from the Cerity Partners Overview Slide Library. Go to Build a Presentation to choose which ones to include — none are selected by default — check the ones you want to include.</p>
 <div class="ppt-gallery">
 <div class="ppt-slide-card" id="s26" data-title="A Holistic Range of Services Customized for You">
 <canvas class="cimg" data-i="15" role="img" aria-label="A Holistic Range of Services Customized for You"></canvas>
@@ -1186,7 +1214,6 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 <section class="content-block" id="sec-familyoffice" data-title="Family Office Solutions" data-category="Firm &amp; Prospecting" data-gallery="true" data-gallery-only="true">
 <div class="section-head"><span class="idx">04</span><h2>Family Office Solutions</h2></div>
 
-<p class="section-sub advisor-note">8 slides available from the Cerity Partners Overview Slide Library. Go to Build a Presentation to choose which ones to include — none are selected by default — check the ones you want to include.</p>
 <div class="ppt-gallery">
 <div class="ppt-slide-card" id="s59" data-title="Staffing Your Family Office">
 <canvas class="cimg" data-i="47" role="img" aria-label="Staffing Your Family Office"></canvas>
@@ -1225,7 +1252,6 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 <section class="content-block" id="sec-foundations" data-title="Foundations and Endowments" data-category="Firm &amp; Prospecting" data-gallery="true" data-gallery-only="true">
 <div class="section-head"><span class="idx">05</span><h2>Foundations and Endowments</h2></div>
 
-<p class="section-sub advisor-note">4 slides available from the Cerity Partners Overview Slide Library. Go to Build a Presentation to choose which ones to include — none are selected by default — check the ones you want to include.</p>
 <div class="ppt-gallery">
 <div class="ppt-slide-card" id="s68" data-title="Delivering Large-Firm Expertise With a Personal Touch">
 <canvas class="cimg" data-i="55" role="img" aria-label="Delivering Large-Firm Expertise With a Personal Touch"></canvas>
@@ -1248,7 +1274,6 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 <section class="content-block" id="sec-invmgmt" data-title="Investment Management Solutions" data-category="Firm &amp; Prospecting" data-gallery="true" data-gallery-only="true">
 <div class="section-head"><span class="idx">06</span><h2>Investment Management Solutions</h2></div>
 
-<p class="section-sub advisor-note">23 slides available from the Cerity Partners Overview Slide Library. Go to Build a Presentation to choose which ones to include — none are selected by default — check the ones you want to include.</p>
 <div class="ppt-gallery">
 <div class="ppt-slide-card" id="s73" data-title="Our Six Guiding Principles">
 <canvas class="cimg" data-i="59" role="img" aria-label="Our Six Guiding Principles"></canvas>
@@ -1394,12 +1419,9 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 <p class="fee-calc-note">Illustrative only, based on the standard tiered schedule above.</p>
 </div>
 
-<div class="flag"><span class="label">Confirm before external use</span>Cross-check against the current Form ADV Part 2A, Item 5 and with Compliance before quoting to a prospect, since fees are negotiable and may vary by engagement.</div>
 </section>
 <section class="content-block" id="sec-onboard" data-title="Onboarding Process" data-category="Onboarding &amp; Service" data-gallery="true" data-gallery-only="true">
 <div class="section-head"><span class="idx">08</span><h2>Onboarding Process</h2></div>
-
-<p class="section-sub advisor-note">Three documents make up the onboarding process — Welcome &amp; Onboarding Steps, Client's First Year, and the Planning Checklist. All are optional; go to Build a Presentation to choose which ones to include.</p>
 
 <div class="ppt-slide-card custom-slide-card" id="c-onboardwelcome" data-title="Welcome &amp; Onboarding Steps">
 <h3 class="subsection-head">Welcome &amp; Onboarding Steps</h3>
@@ -1650,8 +1672,6 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 <section class="content-block" id="sec-contact" data-title="Meet Your Team" data-category="Firm &amp; Prospecting">
 <div class="section-head"><span class="idx">09</span><h2>Meet Your Team</h2></div>
 
-<p class="section-sub team-picker-note">The Boston 2 team, for reference. To feature specific colleagues in a presentation, select them from the "Meet Your Team" row in Build a Presentation.</p>
-
 <details class="month team-roster-block"><summary>Boston 2 Team <span style="font-weight:400; opacity:.75;">(24 colleagues)</span></summary><div class="body">
 <ul class="team-raw-list">
 <li><span class="trl-name">Abrielle Ivey</span><span class="trl-title">Principal</span></li>
@@ -1680,7 +1700,6 @@ letter-spacing:.02em; padding:3px 10px; border-radius:20px;
 <li><span class="trl-name">William Speciale, AEP®, JD</span><span class="trl-title">Partner &amp; Practice Leader</span></li>
 </ul>
 </div></details>
-<div class="flag" style="margin-top:16px;"><span class="label">Data gap</span>Full biographies and confirmed headshots are now in place for all 24 Boston 2 colleagues, sourced directly from ceritypartners.com.</div>
 <div class="selected-contacts-list" id="selectedContactsGrid">
 <div class="contact-mini-empty">No colleagues selected yet.</div>
 </div>
@@ -1907,9 +1926,8 @@ data-highlights="CERTIFIED FINANCIAL PLANNER®|Accredited Estate Planner|Certifi
 </div>
 </div>
 
-<div class="flag"><span class="label">Source note</span>Bios compiled from ceritypartners.com/team profile pages and the internal Boston 2 Team roster. Confirm a bio is current before a meeting — advisor bios are updated periodically on the website.</div>
 </section>
-<section class="content-block" id="sec-advisorquestions" data-title="Questions to Ask When Choosing an Advisor" data-category="Firm &amp; Prospecting">
+<section class="content-block" id="sec-advisorquestions" data-title="Questions to Ask When Choosing an Advisor" data-category="Firm &amp; Prospecting" data-buildtag="Advisor prep — not for presenting">
 <div class="section-head"><span class="idx">10</span><h2>Questions to Ask When Choosing an Advisor</h2></div>
 
 <p class="section-sub">A resource for prospects evaluating any wealth advisor — useful as a leave-behind, or to walk through together to show how Cerity Partners answers each one.</p>
@@ -2021,7 +2039,6 @@ data-highlights="CERTIFIED FINANCIAL PLANNER®|Accredited Estate Planner|Certifi
 </table>
 
 <h3 class="subsection-head">Reference Documents</h3>
-<p class="section-sub advisor-note">Full one-pagers and reference documents built directly into the toolkit — no external link needed. Each is optional and individually selectable in Build a Presentation, the same way the onboarding documents work.</p>
 <div class="ppt-slide-card custom-slide-card" id="c-welcomeemail" data-title="New Client Welcome Email">
 <h3 class="subsection-head">New Client Welcome Email</h3>
 <p class="section-sub">A ready-to-send template for once a prospect signs their wealth management agreement — kicks off the data collection process. Replace the bracketed placeholders before sending.</p>
@@ -2111,32 +2128,28 @@ data-highlights="CERTIFIED FINANCIAL PLANNER®|Accredited Estate Planner|Certifi
 <div class="tp-footer">CERITYPARTNERS.COM</div>
 </div>
 <div id="builderView" class="hidden">
-<p class="builder-intro">Check the sections you want available for this meeting, then launch a clean full-screen walkthrough. You can jump between sections live, or click through in order — nothing outside your selection will show.</p>
 
 
 <div class="tpl-bar" id="tplBar">
 <button type="button" class="tpl-help" id="tplHelp" aria-expanded="false"
 aria-label="About templates">?</button>
 <div class="tpl-help-pop" id="tplHelpPop" hidden>
-The Wealth Management Template is built into this tool and available to everyone.
-It loads automatically, and you can change anything after it does.
-<br><br>
-Templates you save yourself are stored on this browser only — they are not shared
-with other advisors, and will not follow you to another computer.
+Custom templates exist <strong>only</strong> on this browser.
 </div>
 <div class="tpl-row">
 <h3>Templates</h3>
 <select id="tplSelect"><option value="">— saved templates —</option></select>
-<button type="button" class="linklike" id="tplApply">Apply</button>
-<button type="button" class="linklike" id="tplSave">Save current…</button>
-<button type="button" class="linklike" id="tplDefault">Set as default</button>
-<button type="button" class="linklike" id="tplDelete">Delete</button>
+<div class="tpl-actions">
+<button type="button" class="tplbtn primary" id="tplApply">Apply</button>
+<button type="button" class="tplbtn" id="tplSave">Save current…</button>
+<button type="button" class="tplbtn" id="tplDefault">Set as default</button>
+<button type="button" class="tplbtn danger" id="tplDelete">Delete</button>
+</div>
 </div>
 <p class="tpl-note" id="tplNote"></p>
 </div>
 <div class="title-page-form">
 <h3>Opening Title Page</h3>
-<p class="tpf-hint">Styled after the official Cerity Partners cover design. This is always shown first when you launch, ahead of whatever sections you select below.</p>
 <div class="tpf-row">
 <label>Client / Prospect Name
 <input type="text" id="tpfClientName" placeholder="e.g., The Johnson Family">
@@ -2160,8 +2173,6 @@ with other advisors, and will not follow you to another computer.
 <p class="order-hint">Drag to reorder — this sets the sequence you'll move through on screen. Structure it however fits the conversation.</p>
 <div class="order-list" id="orderList"></div>
 </div>
-
-<p class="order-hint" style="margin-top:16px;">Every presentation automatically opens with the Title Page and closes with Disclosure — neither appears above since they're not optional.</p>
 
 <p class="deck-total" id="deckTotal"></p>
 <button id="launchBtn" class="launch-btn">Launch Presentation ▸</button>
@@ -2316,10 +2327,18 @@ const list = document.createElement('div');
 list.className='builder-items';
 cats[cat].forEach(b=>{
 const id=b.id, title=b.dataset.title, isDense = b.dataset.default==='off';
+// A section can name its own caveat; otherwise the dense-content one applies.
+const tag = b.dataset.buildtag
+? '<span class="tag prep">'+b.dataset.buildtag+'</span>'
+: (isDense ? '<span class="tag stale">Dense — screen not recommended</span>' : '');
+// Rebuilt on every visit to the Build tab, so the section's own checkbox has to
+// be restored from the order the same way its slides are restored from
+// selectedGallerySlides. Without this the sections silently unchecked and a
+// loaded template produced an empty deck.
+const wasChosen = presentationOrder.indexOf(id) !== -1 ? ' checked' : '';
 const row=document.createElement('label');
 row.className='builder-item';
-row.innerHTML = '<input type="checkbox" value="'+id+'"><span>'+title+'</span>'+
-(isDense ? '<span class="tag stale">Dense — screen not recommended</span>' : '');
+row.innerHTML = '<input type="checkbox" value="'+id+'"'+wasChosen+'><span>'+title+'</span>'+tag;
 const cb = row.querySelector('input');
 list.appendChild(row);
 
@@ -2412,8 +2431,11 @@ if(n.__sync) n.__sync(); else n.style.display='none';
 });
 };
 });
-// initialize order from whatever is checked by default (section-level checkboxes only)
-presentationOrder = Array.from(container.querySelectorAll('.builder-item > input:checked')).map(i=>i.value);
+// Keep the order the advisor arranged; only append sections checked by default
+// that are not already in it (section-level checkboxes only).
+const checkedNow = Array.from(container.querySelectorAll('.builder-item > input:checked')).map(i=>i.value);
+presentationOrder = presentationOrder.filter(id=>checkedNow.includes(id))
+.concat(checkedNow.filter(id=>!presentationOrder.includes(id)));
 renderOrderList();
 }
 
@@ -4141,7 +4163,7 @@ window.__BUILTIN_TEMPLATES__ = {
              (tag ? '  ' + tag : '') + (store.def === n ? '  (default)' : '') + '</option>';
     }
     sel.innerHTML = '<option value="">— choose a template —</option>' +
-      built.map(function(n){ return opt(n, '(built-in)'); }).join('') +
+      built.map(function(n){ return opt(n, ''); }).join('') +
       saved.map(function(n){ return opt(n, ''); }).join('');
     if (keep && (store.templates[keep] || BUILTIN[keep])) sel.value = keep;
   }
@@ -4228,8 +4250,8 @@ window.__BUILTIN_TEMPLATES__ = {
     appliedDefault = true;
     sel.value = name;
     apply(t);
-    say(store.def === name ? 'Applied your default template, "' + name + '".'
-                           : 'Started from the ' + name + '.');
+    if (store.def === name) say('Applied your default template, "' + name + '".');
+    else if (!note.classList.contains('warn')) say('');
   }
   document.addEventListener('click', function(e){
     var btn = e.target.closest && e.target.closest('.modebtn');
