@@ -370,7 +370,7 @@ and the New Client Welcome Email. Those now render as plain checkbox + label
 rows, and a picker whose cards all lack images lays out as a list rather than a
 thumbnail grid. The five pickers that do have thumbnails are untouched.
 
-`--collapsible` separates collapsing from selecting. The nested slide list had
+`--collapsible` separates collapsing from selecting (24px caret inside the row). The nested slide list had
 no collapse control: its visibility was wired straight to the section checkbox,
 so collapsing a 23-slide section meant unchecking it, which called
 removeFromOrder() and dropped the section. A caret now toggles the list

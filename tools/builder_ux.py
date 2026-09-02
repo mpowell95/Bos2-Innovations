@@ -77,8 +77,10 @@ font-size:14px; color:#33404d;
 # --collapsible
 # --------------------------------------------------------------------------
 
-# The row is a <label>, so anything inside it toggles the checkbox. The caret is
-# inserted as a sibling before the label and positioned into the row's gutter.
+# The row is a <label>, so a click anywhere inside it would normally toggle the
+# checkbox. The caret sits inside the row — which lets it be centred against the
+# row box instead of nudged with negative margins — and suppresses the label's
+# activation behaviour itself. Verified with a real hit-tested click.
 COLLAPSE_OLD = """cb.addEventListener('change', ()=>{
 if(cb.checked) addToOrder(id); else removeFromOrder(id);
 if(nested) nested.style.display = cb.checked ? '' : 'none';
@@ -94,7 +96,7 @@ caret.type = 'button';
 caret.className = 'nested-caret';
 caret.setAttribute('aria-label', 'Show or hide the items in this section');
 caret.textContent = '▾';
-row.insertAdjacentElement('beforebegin', caret);
+row.insertAdjacentElement('afterbegin', caret);
 row.classList.add('has-caret');
 nested.dataset.collapsed = 'false';
 function syncNested(){
@@ -134,16 +136,20 @@ if(n.__sync) n.__sync(); else n.style.display='none';
 
 COLLAPSE_CSS = """
 /* Caret that shows or hides a section's slide list without changing the
-   selection. It sits outside the row's <label> so clicking it cannot toggle
-   the checkbox. */
+   selection. Sized as a real control rather than a hairline: a 24px target,
+   centred on the row, in the same ink as the row text. */
+.builder-item.has-caret{ position:relative; padding-left:26px; }
 .nested-caret{
-appearance:none; background:none; border:none; cursor:pointer;
-font-size:11px; line-height:1; color:var(--clay);
-padding:0; margin:0 0 -28px -14px; width:14px; height:14px;
-position:relative; top:19px; z-index:2;
+appearance:none; border:none; cursor:pointer;
+position:absolute; left:0; top:50%; transform:translateY(-50%);
+width:24px; height:24px; padding:0;
+display:flex; align-items:center; justify-content:center;
+font-size:12px; line-height:1; color:var(--fiord);
+background:var(--vellum); border-radius:5px;
+transition:background .12s ease, color .12s ease;
 }
-.nested-caret:hover{ color:var(--fiord); }
-.builder-item.has-caret{ padding-left:2px; }
+.nested-caret:hover{ background:var(--fiord); color:#fff; }
+.nested-caret:focus-visible{ outline:2px solid var(--tradewind); outline-offset:1px; }
 """
 
 
