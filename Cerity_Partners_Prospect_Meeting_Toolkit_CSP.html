@@ -791,28 +791,54 @@ border-bottom:5px solid var(--cobalt);
 /* A presenting slide card is position:absolute with inset:0, but .present-stage
    was not a positioned ancestor, so the card resolved against the full-screen
    overlay and covered the sidebar. On Deck was therefore unclickable whenever a
-   slide image was on screen — which predates the grouping below and makes it
-   pointless without this. Confining the card to the stage fixes it. */
+   slide image was on screen. Confining the card to the stage fixes it. */
 .present-stage{ position:relative; }
 
-/* On Deck grouped by section: only the group holding the current slide opens. */
+/* ---- On Deck ------------------------------------------------------------
+   A progress rail rather than a menu. Numbered circles competed with the
+   section names and told an advisor nothing they needed; position in the deck
+   is the one fact worth stating, so it is stated once at the top and otherwise
+   carried by a continuous rail down the gutter. */
+.present-sidebar{ width:258px; padding:16px 0; }
+
+.sb-position{ padding:2px 20px 16px; }
+.sb-pos-count{
+display:block; font-family:'Helvetica Neue', Arial, sans-serif;
+font-size:19px; font-weight:600; color:var(--cobalt); letter-spacing:-.01em;
+}
+.sb-pos-count i{ font-style:normal; font-weight:400; font-size:13px; color:var(--clay); }
+.sb-progress{ display:block; height:3px; margin-top:8px; background:var(--rule); border-radius:2px; overflow:hidden; }
+.sb-progress i{ display:block; height:100%; background:var(--tradewind); transition:width .22s ease; }
+
+/* One continuous line through every row, carrying the position marker. */
+.present-nav-item{ position:relative; padding:10px 18px 10px 34px; align-items:center; border-left:none; }
+.present-nav-item .sb-rail{ position:absolute; left:19px; top:0; bottom:0; width:2px; background:var(--rule); }
+.present-nav-item .sb-rail::after{
+content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+width:7px; height:7px; border-radius:50%; background:var(--rule);
+box-shadow:0 0 0 3px var(--vellum);
+}
+.present-nav-item.done .sb-rail, .present-nav-item.done .sb-rail::after{ background:var(--tradewind); }
+.present-nav-item.active .sb-rail::after{ width:11px; height:11px; background:var(--cobalt); }
+
+.sb-gtitle{ flex:1; font-size:13.5px; }
+.sb-ctitle{ flex:1; }
+.present-nav-item.active{ background:#fff; color:var(--cobalt); font-weight:600; }
+.sb-group.open > .sb-head{ color:var(--cobalt); font-weight:600; }
+
+.sb-head .sb-count{
+flex-shrink:0; font-family:'Helvetica Neue', Arial, sans-serif;
+font-size:10px; letter-spacing:.06em; color:var(--clay); font-variant-numeric:tabular-nums;
+}
+.sb-group.open > .sb-head .sb-count{ color:var(--tradewind); }
+
 .sb-group .sb-children{ display:none; }
 .sb-group.open .sb-children{ display:block; }
-.sb-head .sb-gtitle{ flex:1; }
-.sb-head .sb-count{
-flex-shrink:0; font-size:10px; color:var(--clay);
-background:var(--fiord-light); color:#fff; border-radius:20px; padding:1px 7px; line-height:1.5;
-}
-.sb-head .sb-caret{ flex-shrink:0; width:10px; text-align:center; font-size:9px; color:var(--clay); }
-.sb-group.open .sb-head{ font-weight:600; color:var(--cobalt); }
-.sb-group.done .sb-head .sb-num{ background:var(--tradewind); }
-.present-nav-item.sb-child{ padding-left:44px; font-size:12.5px; }
-.present-nav-item.sb-child .sb-dot{
-flex-shrink:0; width:5px; height:5px; border-radius:50%;
-background:var(--fiord-light); margin-top:6px;
-}
-.present-nav-item.sb-child.active .sb-dot{ background:var(--fiord); }
-.present-nav-item.sb-child.done .sb-dot{ background:var(--tradewind); }
+.present-nav-item.sb-child{ padding-left:46px; font-size:12.5px; color:#5b6875; }
+.present-nav-item.sb-child .sb-rail{ left:31px; }
+.present-nav-item.sb-child .sb-rail::after{ width:5px; height:5px; }
+.present-nav-item.sb-child.active{ color:var(--cobalt); }
+.present-nav-item.sb-child.active .sb-rail::after{ width:9px; height:9px; }
 
 /* Running deck length, shown before the presentation is launched. */
 .deck-total{
@@ -2662,6 +2688,12 @@ return groups;
 function buildSidebar(){
 const wrap = document.getElementById('overlaySidebar');
 wrap.innerHTML = '';
+// Where you are in the deck is what an advisor wants mid-meeting, so state it
+// once at the top rather than making them count rows.
+const pos = document.createElement('div');
+pos.className = 'sb-position';
+pos.id = 'sbPosition';
+wrap.appendChild(pos);
 sidebarGroups().forEach((g, gi)=>{
 // Where a group has a page of its own and nothing else, keep the plain row.
 if(g.items.length === 0){
@@ -2669,7 +2701,7 @@ const item = document.createElement('div');
 item.className = 'present-nav-item';
 item.dataset.index = g.head;
 item.dataset.group = g.id;
-item.innerHTML = '<span class="sb-num">'+(gi+1)+'</span><span>'+g.title+'</span>';
+item.innerHTML = '<span class="sb-rail"></span><span class="sb-gtitle">'+g.title+'</span>';
 item.addEventListener('click', ()=>{ currentIndex = g.head; renderSlide(); });
 wrap.appendChild(item);
 return;
@@ -2684,8 +2716,8 @@ head.className = 'present-nav-item sb-head';
 // first slide in the group instead.
 const target = g.head !== null ? g.head : g.items[0].index;
 head.dataset.index = target;
-head.innerHTML = '<span class="sb-num">'+(gi+1)+'</span><span class="sb-gtitle">'+g.title+'</span>'+
-'<span class="sb-count">'+g.items.length+'</span><span class="sb-caret">▸</span>';
+head.innerHTML = '<span class="sb-rail"></span><span class="sb-gtitle">'+g.title+'</span>'+
+'<span class="sb-count">'+g.items.length+'</span>';
 head.addEventListener('click', ()=>{ currentIndex = target; renderSlide(); });
 box.appendChild(head);
 
@@ -2695,7 +2727,7 @@ g.items.forEach(it=>{
 const row = document.createElement('div');
 row.className = 'present-nav-item sb-child';
 row.dataset.index = it.index;
-row.innerHTML = '<span class="sb-dot"></span><span>'+it.title+'</span>';
+row.innerHTML = '<span class="sb-rail"></span><span class="sb-ctitle">'+it.title+'</span>';
 row.addEventListener('click', (e)=>{ e.stopPropagation(); currentIndex = it.index; renderSlide(); });
 kids.appendChild(row);
 });
@@ -2719,9 +2751,15 @@ const idxs = [].slice.call(box.querySelectorAll('.present-nav-item'))
 const holds = idxs.indexOf(currentIndex) !== -1;
 box.classList.toggle('open', holds);
 box.classList.toggle('done', Math.max.apply(null, idxs) < currentIndex);
-const caret = box.querySelector('.sb-caret');
-if(caret) caret.textContent = holds ? '▾' : '▸';
+
 });
+const pos = document.getElementById('sbPosition');
+if(pos){
+const n = currentSlides.length;
+const pct = n > 1 ? Math.round(100 * currentIndex / (n - 1)) : 100;
+pos.innerHTML = '<span class="sb-pos-count">'+(currentIndex+1)+' <i>of</i> '+n+'</span>'+
+'<span class="sb-progress"><i style="width:'+pct+'%"></i></span>';
+}
 const activeItem = document.querySelector('#overlaySidebar .present-nav-item.active');
 if(activeItem) activeItem.scrollIntoView({ block:'nearest' });
 }
@@ -3968,9 +4006,9 @@ window.__BUILTIN_TEMPLATES__ = {
   "Wealth Management Template": {
     order: ["sec-whycerity","sec-offerings","sec-wealthplanning","sec-invmgmt","sec-fees","sec-contact"],
     slides: {
-      "sec-whycerity":      ["c-whoweare","s12","s15","s18","c-whyus"],
-      "sec-wealthplanning": ["s26","s27","s29","s34","s30","s31"],
-      "sec-invmgmt":        ["s73","s75","s76","s77","s85","s84","s83"]
+      "sec-whycerity":      ["c-whoweare","c-whyus","s15","s12","s14","s17","s19"],
+      "sec-wealthplanning": ["s26","s31","s34","s35","s47"],
+      "sec-invmgmt":        ["s73","s75","s74","s76","s77","s83","s85","s84"]
     },
     contacts: [],
     presentedBy: ""

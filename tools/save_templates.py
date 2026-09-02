@@ -102,9 +102,9 @@ window.__BUILTIN_TEMPLATES__ = {
   "Wealth Management Template": {
     order: ["sec-whycerity","sec-offerings","sec-wealthplanning","sec-invmgmt","sec-fees","sec-contact"],
     slides: {
-      "sec-whycerity":      ["c-whoweare","s12","s15","s18","c-whyus"],
-      "sec-wealthplanning": ["s26","s27","s29","s34","s30","s31"],
-      "sec-invmgmt":        ["s73","s75","s76","s77","s85","s84","s83"]
+      "sec-whycerity":      ["c-whoweare","c-whyus","s15","s12","s14","s17","s19"],
+      "sec-wealthplanning": ["s26","s31","s34","s35","s47"],
+      "sec-invmgmt":        ["s73","s75","s74","s76","s77","s83","s85","s84"]
     },
     contacts: [],
     presentedBy: ""
