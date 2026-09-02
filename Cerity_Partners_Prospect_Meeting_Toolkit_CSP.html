@@ -728,17 +728,21 @@ font-size:14px; color:#33404d;
 .gallery-check-item.no-thumb input{ width:16px; height:16px; accent-color:var(--fiord); flex-shrink:0; }
 
 /* Caret that shows or hides a section's slide list without changing the
-   selection. Filled dark at all times and sized to read at a glance — earlier
-   passes at 14px then 24px on a pale ground were too easy to miss. */
-.builder-item.has-caret{ position:relative; padding-left:44px; }
+   selection.
+
+   The gutter is reserved on every row, not just the ones that have a caret.
+   Reserving it only where a caret exists left checkboxes at two different
+   indents — a section keeps its gutter even while unchecked, when the caret is
+   hidden — so the left edge came out ragged and looked broken. One column for
+   the caret, one for the checkbox, on every row. */
+.builder-item{ position:relative; padding-left:40px; }
 .nested-caret{
 appearance:none; border:none; cursor:pointer;
 position:absolute; left:0; top:50%; transform:translateY(-50%);
-width:32px; height:32px; padding:0;
+width:30px; height:30px; padding:0;
 display:flex; align-items:center; justify-content:center;
-font-size:15px; line-height:1;
+font-size:14px; line-height:1;
 color:#fff; background:var(--fiord); border-radius:6px;
-box-shadow:0 1px 2px rgba(41,51,64,0.25);
 transition:background .12s ease;
 }
 .nested-caret:hover{ background:var(--cobalt); }
