@@ -33,8 +33,11 @@ BAR = """
 <button type="button" class="tpl-help" id="tplHelp" aria-expanded="false"
 aria-label="About templates">?</button>
 <div class="tpl-help-pop" id="tplHelpPop" hidden>
-Custom templates are saved on this browser only. They are not shared with other
-advisors, and they will not follow you to another computer.
+The Wealth Management Template is built into this tool and available to everyone.
+It loads automatically, and you can change anything after it does.
+<br><br>
+Templates you save yourself are stored on this browser only — they are not shared
+with other advisors, and will not follow you to another computer.
 </div>
 <div class="tpl-row">
 <h3>Templates</h3>
@@ -91,6 +94,22 @@ border-bottom:5px solid var(--cobalt);
 
 SCRIPT = r"""
 <script>
+// Built in to the file rather than saved per browser, so every advisor has it
+// without setting anything up. Reconstructed from the approved deck: section
+// order, the slides chosen in each, and the order they were dragged into
+// (s34 before s30, s85 before s84, and Who We Are before the gallery slides).
+window.__BUILTIN_TEMPLATES__ = {
+  "Wealth Management Template": {
+    order: ["sec-whycerity","sec-offerings","sec-wealthplanning","sec-invmgmt","sec-fees","sec-contact"],
+    slides: {
+      "sec-whycerity":      ["c-whoweare","s12","s15","s18","c-whyus"],
+      "sec-wealthplanning": ["s26","s27","s29","s34","s30","s31"],
+      "sec-invmgmt":        ["s73","s75","s76","s77","s85","s84","s83"]
+    },
+    contacts: [],
+    presentedBy: ""
+  }
+};
 // ---------------------------------------------------------------------------
 // Saved selection templates. See save_templates.py.
 // ---------------------------------------------------------------------------
@@ -107,6 +126,9 @@ SCRIPT = r"""
 
   // Private windows and blocked site data throw on access, so never let a
   // storage failure take the builder down with it.
+  var BUILTIN = window.__BUILTIN_TEMPLATES__ || {};
+  function isBuiltin(name){ return Object.prototype.hasOwnProperty.call(BUILTIN, name); }
+
   function read(){
     try {
       var raw = localStorage.getItem(KEY);
@@ -119,6 +141,13 @@ SCRIPT = r"""
   function write(store){
     try { localStorage.setItem(KEY, JSON.stringify(store)); return true; }
     catch (e){ say('This browser will not let the tool save templates.', true); return false; }
+  }
+
+  function templateNamed(name){
+    var store = read();
+    // A saved template of the same name wins, so an advisor can adapt the
+    // built-in one without losing the ability to save it.
+    return store.templates[name] || BUILTIN[name] || null;
   }
 
   function boxes(value){
@@ -201,13 +230,16 @@ SCRIPT = r"""
 
   function refresh(keep){
     var store = read();
-    var names = Object.keys(store.templates).sort(function(a,b){ return a.localeCompare(b); });
-    sel.innerHTML = '<option value="">— saved templates —</option>' +
-      names.map(function(n){
-        return '<option value="' + n.replace(/"/g,'&quot;') + '">' +
-               n + (store.def === n ? '  (default)' : '') + '</option>';
-      }).join('');
-    if (keep && store.templates[keep]) sel.value = keep;
+    var saved = Object.keys(store.templates).sort(function(a,b){ return a.localeCompare(b); });
+    var built = Object.keys(BUILTIN).filter(function(n){ return saved.indexOf(n) === -1; }).sort();
+    function opt(n, tag){
+      return '<option value="' + n.replace(/"/g,'&quot;') + '">' + n +
+             (tag ? '  ' + tag : '') + (store.def === n ? '  (default)' : '') + '</option>';
+    }
+    sel.innerHTML = '<option value="">— choose a template —</option>' +
+      built.map(function(n){ return opt(n, '(built-in)'); }).join('') +
+      saved.map(function(n){ return opt(n, ''); }).join('');
+    if (keep && (store.templates[keep] || BUILTIN[keep])) sel.value = keep;
   }
 
   document.getElementById('tplSave').addEventListener('click', function(){
@@ -223,14 +255,14 @@ SCRIPT = r"""
   });
 
   document.getElementById('tplApply').addEventListener('click', function(){
-    var store = read(), name = sel.value;
-    if (!name || !store.templates[name]){ say('Choose a template first.', true); return; }
-    apply(store.templates[name]);
+    var name = sel.value, t = templateNamed(name);
+    if (!t){ say('Choose a template first.', true); return; }
+    apply(t);
   });
 
   document.getElementById('tplDefault').addEventListener('click', function(){
     var store = read(), name = sel.value;
-    if (!name || !store.templates[name]){ say('Choose a template first.', true); return; }
+    if (!name || !templateNamed(name)){ say('Choose a template first.', true); return; }
     store.def = (store.def === name) ? '' : name;
     if (write(store)){
       refresh(name);
@@ -241,7 +273,11 @@ SCRIPT = r"""
 
   document.getElementById('tplDelete').addEventListener('click', function(){
     var store = read(), name = sel.value;
-    if (!name || !store.templates[name]){ say('Choose a template first.', true); return; }
+    if (!name){ say('Choose a template first.', true); return; }
+    if (!store.templates[name]){
+      say(isBuiltin(name) ? 'Built-in templates cannot be deleted.' : 'Choose a template first.', true);
+      return;
+    }
     if (!confirm('Delete the template "' + name + '"?')) return;
     delete store.templates[name];
     if (store.def === name) store.def = '';
@@ -279,12 +315,17 @@ SCRIPT = r"""
   function applyDefaultOnce(){
     if (appliedDefault) return;
     var store = read();
-    if (!store.def || !store.templates[store.def]) { appliedDefault = true; return; }
+    // The advisor's own default wins; otherwise fall back to the built-in one
+    // so a new browser opens on the approved deck rather than a blank builder.
+    var name = (store.def && templateNamed(store.def)) ? store.def : Object.keys(BUILTIN)[0];
+    var t = name ? templateNamed(name) : null;
+    if (!t) { appliedDefault = true; return; }
     if (!document.querySelector('#builderList .builder-item > input')) return;
     appliedDefault = true;
-    sel.value = store.def;
-    apply(store.templates[store.def]);
-    say('Applied your default template, "' + store.def + '".');
+    sel.value = name;
+    apply(t);
+    say(store.def === name ? 'Applied your default template, "' + name + '".'
+                           : 'Started from the ' + name + '.');
   }
   document.addEventListener('click', function(e){
     var btn = e.target.closest && e.target.closest('.modebtn');

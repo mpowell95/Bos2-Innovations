@@ -39,6 +39,15 @@ font-family:'Helvetica Neue', Arial, sans-serif; font-size:14px; color:#33404d;
 }
 .deck-total strong{ font-size:16px; color:var(--cobalt); }
 .deck-total .dt-note{ display:block; margin-top:3px; font-size:12px; color:var(--clay); }
+
+/* How much is selected in a section, readable while it is collapsed. */
+.row-badge{
+margin-left:auto; flex-shrink:0;
+background:var(--tradewind); color:#fff;
+font-family:'Helvetica Neue', Arial, sans-serif; font-size:10.5px; font-weight:600;
+letter-spacing:.02em; padding:3px 10px; border-radius:20px;
+}
+.builder-item .tag.stale + .row-badge{ margin-left:8px; }
 """
 
 SCRIPT = r"""
@@ -47,6 +56,28 @@ SCRIPT = r"""
 // Selection counts. See deck_counts.py.
 // ---------------------------------------------------------------------------
 (function(){
+  // A collapsed section hides its picker, and with it the only sign of how much
+  // was chosen there. Put the count on the row itself so it survives collapsing.
+  function updateRowBadges(){
+    document.querySelectorAll('#builderList .builder-item-nested').forEach(function(nested){
+      var row = nested.previousElementSibling;
+      if (!row || !row.classList.contains('builder-item')) return;
+      var boxes = nested.querySelectorAll('.gallery-check-item input[type="checkbox"], #contactCheckboxes input[type="checkbox"]');
+      if (!boxes.length) return;
+      var picked = 0;
+      boxes.forEach(function(b){ if (b.checked) picked++; });
+      var badge = row.querySelector('.row-badge');
+      if (!badge){
+        badge = document.createElement('span');
+        badge.className = 'row-badge';
+        row.appendChild(badge);
+      }
+      var noun = nested.querySelector('#contactCheckboxes') ? 'colleague' : 'slide';
+      badge.textContent = picked + ' ' + noun + (picked === 1 ? '' : 's');
+      badge.hidden = picked === 0;
+    });
+  }
+
   function updateGalleryCounts(){
     document.querySelectorAll('.gp-count').forEach(function(h){
       var body = h.closest('.builder-item-nested');
@@ -101,15 +132,15 @@ SCRIPT = r"""
     var original = renderOrderList;
     renderOrderList = function(){
       var r = original.apply(this, arguments);
-      try { updateGalleryCounts(); updateDeckTotal(); } catch (e){}
+      try { updateGalleryCounts(); updateRowBadges(); updateDeckTotal(); } catch (e){}
       return r;
     };
   }
   document.addEventListener('click', function(e){
     if (e.target.closest && e.target.closest('.modebtn'))
-      setTimeout(function(){ updateGalleryCounts(); updateDeckTotal(); }, 0);
+      setTimeout(function(){ updateGalleryCounts(); updateRowBadges(); updateDeckTotal(); }, 0);
   });
-  updateGalleryCounts(); updateDeckTotal();
+  updateGalleryCounts(); updateRowBadges(); updateDeckTotal();
 })();
 </script>
 """
