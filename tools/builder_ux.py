@@ -136,20 +136,22 @@ if(n.__sync) n.__sync(); else n.style.display='none';
 
 COLLAPSE_CSS = """
 /* Caret that shows or hides a section's slide list without changing the
-   selection. Sized as a real control rather than a hairline: a 24px target,
-   centred on the row, in the same ink as the row text. */
-.builder-item.has-caret{ position:relative; padding-left:26px; }
+   selection. Filled dark at all times and sized to read at a glance — earlier
+   passes at 14px then 24px on a pale ground were too easy to miss. */
+.builder-item.has-caret{ position:relative; padding-left:44px; }
 .nested-caret{
 appearance:none; border:none; cursor:pointer;
 position:absolute; left:0; top:50%; transform:translateY(-50%);
-width:24px; height:24px; padding:0;
+width:32px; height:32px; padding:0;
 display:flex; align-items:center; justify-content:center;
-font-size:12px; line-height:1; color:var(--fiord);
-background:var(--vellum); border-radius:5px;
-transition:background .12s ease, color .12s ease;
+font-size:15px; line-height:1;
+color:#fff; background:var(--fiord); border-radius:6px;
+box-shadow:0 1px 2px rgba(41,51,64,0.25);
+transition:background .12s ease;
 }
-.nested-caret:hover{ background:var(--fiord); color:#fff; }
-.nested-caret:focus-visible{ outline:2px solid var(--tradewind); outline-offset:1px; }
+.nested-caret:hover{ background:var(--cobalt); }
+.nested-caret:active{ transform:translateY(-50%) scale(0.94); }
+.nested-caret:focus-visible{ outline:2px solid var(--tradewind); outline-offset:2px; }
 """
 
 
