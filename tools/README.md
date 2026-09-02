@@ -462,3 +462,22 @@ either list gains or loses an entry.
 
 Bio cards are left alone: they sort by seniority and then by dataset.name, which
 begins with the first name, so they are already first-name ordered within rank.
+
+---
+
+# deck_counts.py
+
+    python3 tools/deck_counts.py IN.html OUT.html
+
+Turns each gallery picker's fixed "16 items available" into a live
+"2 of 16 items selected", and adds a running deck length above the Launch
+button so its size is visible before it is built.
+
+The total mirrors expandForPresentation — gallery-only sections contribute
+nothing on their own, and the Title Page and Disclosure are always added — so it
+matches the deck that actually launches. Verified: a selection predicting 7
+produced a currentSlides of exactly 7.
+
+Both hang off renderOrderList(), the one funnel every change already passes
+through. Listening for change events would have missed Select All and Clear,
+which set .checked directly and fire nothing.

@@ -783,6 +783,16 @@ background:var(--fiord-light); margin-top:6px;
 }
 .present-nav-item.sb-child.active .sb-dot{ background:var(--fiord); }
 .present-nav-item.sb-child.done .sb-dot{ background:var(--tradewind); }
+
+/* Running deck length, shown before the presentation is launched. */
+.deck-total{
+margin:18px 0 10px; padding:12px 16px;
+border:1px solid var(--rule); border-left:3px solid var(--tradewind);
+border-radius:6px; background:var(--vellum);
+font-family:'Helvetica Neue', Arial, sans-serif; font-size:14px; color:#33404d;
+}
+.deck-total strong{ font-size:16px; color:var(--cobalt); }
+.deck-total .dt-note{ display:block; margin-top:3px; font-size:12px; color:var(--clay); }
 </style>
 </head>
 <body>
@@ -2079,6 +2089,7 @@ data-highlights="CERTIFIED FINANCIAL PLANNER®|Accredited Estate Planner|Certifi
 
 <p class="order-hint" style="margin-top:16px;">Every presentation automatically opens with the Title Page and closes with Disclosure — neither appears above since they're not optional.</p>
 
+<p class="deck-total" id="deckTotal"></p>
 <button id="launchBtn" class="launch-btn">Launch Presentation ▸</button>
 </div>
 
@@ -2258,7 +2269,7 @@ nested.className = 'builder-item-nested';
 if(cards.length === 0){
 nested.innerHTML = '<p class="order-empty" style="margin:10px 16px;">No individually selectable documents here yet.</p>';
 } else {
-nested.innerHTML = '<div class="contact-picker-head"><h3>'+cards.length+' items available</h3><div class="cat-actions">'+
+nested.innerHTML = '<div class="contact-picker-head"><h3 class="gp-count" data-total="'+cards.length+'">0 of '+cards.length+' items selected</h3><div class="cat-actions">'+
 '<button type="button" data-galleryall="all">Select All</button><button type="button" data-galleryall="none">Clear</button></div></div>'+
 '<div class="gallery-picker-body'+(cards.some(c=>resolveThumb(c)) ? '' : ' plain-list')+'">'+
 cards.map(card=>{
@@ -4079,6 +4090,78 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var btn = e.target.closest && e.target.closest('.modebtn');
     if (btn && btn.dataset.mode === 'builder') setTimeout(applyDefaultOnce, 0);
   });
+})();
+</script>
+
+
+<script>
+// ---------------------------------------------------------------------------
+// Selection counts. See deck_counts.py.
+// ---------------------------------------------------------------------------
+(function(){
+  function updateGalleryCounts(){
+    document.querySelectorAll('.gp-count').forEach(function(h){
+      var body = h.closest('.builder-item-nested');
+      if (!body) return;
+      var boxes = body.querySelectorAll('.gallery-check-item input[type="checkbox"]');
+      var picked = 0;
+      boxes.forEach(function(b){ if (b.checked) picked++; });
+      h.textContent = picked + ' of ' + boxes.length + ' items selected';
+    });
+  }
+
+  // Mirrors expandForPresentation, plus the Title Page and Disclosure that are
+  // always added, so the number matches the deck that actually gets built.
+  function deckLength(){
+    var total = 0, sections = 0;
+    (typeof presentationOrder !== 'undefined' ? presentationOrder : []).forEach(function(id){
+      var block = document.getElementById(id);
+      if (!block) return;
+      if (block.dataset.gallery === 'true'){
+        var slides = [].slice.call(block.querySelectorAll('.ppt-slide-card'))
+          .filter(function(card){
+            return card.id && document.querySelector(
+              'input[type="checkbox"][value="' + card.id + '"]:checked');
+          }).length;
+        var self = block.dataset.galleryOnly === 'true' ? 0 : 1;
+        total += slides + self;
+        if (slides + self) sections++;
+      } else {
+        total += 1; sections++;
+      }
+    });
+    return {slides: total + 2, sections: sections};   // + Title Page, + Disclosure
+  }
+
+  function updateDeckTotal(){
+    var el = document.getElementById('deckTotal');
+    if (!el) return;
+    var d = deckLength();
+    if (d.sections === 0){
+      el.innerHTML = '<strong>Nothing selected yet.</strong>' +
+        '<span class="dt-note">Check sections above to build the deck.</span>';
+      return;
+    }
+    el.innerHTML = '<strong>' + d.slides + ' slides</strong> across ' +
+      d.sections + ' section' + (d.sections === 1 ? '' : 's') +
+      '<span class="dt-note">Includes the Title Page and Disclosure, which are always added.</span>';
+  }
+
+  // Every path that changes a selection calls renderOrderList — including the
+  // Select All buttons, which set .checked directly and fire no event.
+  if (typeof renderOrderList === 'function'){
+    var original = renderOrderList;
+    renderOrderList = function(){
+      var r = original.apply(this, arguments);
+      try { updateGalleryCounts(); updateDeckTotal(); } catch (e){}
+      return r;
+    };
+  }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest('.modebtn'))
+      setTimeout(function(){ updateGalleryCounts(); updateDeckTotal(); }, 0);
+  });
+  updateGalleryCounts(); updateDeckTotal();
 })();
 </script>
 
