@@ -41,6 +41,14 @@ def sub(label, old, new):
     EDITS.append((label, old, new))
 
 
+# --- Page title -----------------------------------------------------------
+
+# The browser tab and any bookmark. Leads with what it is, since the tab strip
+# truncates from the right.
+sub("retitle the page",
+    "<title>Cerity Partners — Prospect Meeting Toolkit</title>",
+    "<title>Prospect Meeting Toolkit - CP Bos2</title>")
+
 # --- Templates bar --------------------------------------------------------
 
 # The built-in is just "Wealth Management Template"; tagging it as built-in
