@@ -409,3 +409,39 @@ import would be the next step for that.
 Alphabetising was already done: both the Meet Your Team roster and the builder's
 colleague picker are in surname order (24 each, verified). Bio cards in the
 presentation stay in seniority order by request.
+
+---
+
+# sidebar_groups.py
+
+    python3 tools/sidebar_groups.py IN.html OUT.html
+
+Groups the presentation's On Deck sidebar by section instead of listing every
+slide. Membership is derived from the DOM — a slide card reports the
+`.content-block` it sits in — so nothing about how the deck is built changes.
+
+Three shapes, all present in this deck:
+
+  * A section with no slides of its own (Title Page, Fee Structure, Meet Your
+    Team, Disclosure) stays a single plain row.
+  * A gallery-only section has no page of its own, so its header jumps to its
+    first slide.
+  * General Resources appears both as its own page and as the parent of a slide,
+    so its page becomes the group header.
+
+Only the group holding the current slide is open. Every header navigates, and
+navigating is what opens a group, so there is no separate expand state to drift
+out of step with the deck position.
+
+## Sidebar was unclickable during slides — pre-existing
+
+`.ppt-slide-card.presenting` is `position:absolute; inset:0`, but
+`.present-stage` was not a positioned ancestor, so the card resolved against the
+full-screen overlay and rendered 1440px wide starting at x=0 — covering the
+250px sidebar. `elementFromPoint` over the sidebar returned the slide card, in
+this build and in the original alike, so On Deck could not be clicked whenever a
+slide image was on screen and the deck could only be driven by the arrows.
+
+`.present-stage{ position:relative }` confines the card to the stage. Measured
+after the fix, the card and the stage occupy the same box (left 250, width
+1190), so the slide itself is unchanged.
