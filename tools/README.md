@@ -445,3 +445,20 @@ slide image was on screen and the deck could only be driven by the arrows.
 `.present-stage{ position:relative }` confines the card to the stage. Measured
 after the fix, the card and the stage occupy the same box (left 250, width
 1190), so the slide itself is unchanged.
+
+---
+
+# alphabetize_team.py
+
+    python3 tools/alphabetize_team.py IN.html OUT.html
+
+Both colleague lists were already alphabetical — by surname. But they display
+first-name-first, so scanning down gives Samuel, Nicole, Barbara, David, which
+reads as unsorted. Sorting by the name as written makes the order visible; ties
+on the first name (two Farahs, two Matthews) fall back to the surname.
+
+Reorders the Meet Your Team roster and TEAM_CONTACTS, and refuses to write if
+either list gains or loses an entry.
+
+Bio cards are left alone: they sort by seniority and then by dataset.name, which
+begins with the first name, so they are already first-name ordered within rank.
