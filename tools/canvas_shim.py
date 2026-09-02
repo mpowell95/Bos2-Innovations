@@ -313,7 +313,12 @@ def main():
         separators=(",", ":"),
     )
     block = '<script>window.__IMG_ASSETS__=' + payload + ';</script>' + LOADER
-    html = html.replace("</body>", block + "\n</body>", 1)
+    # Anchor to the document's real closing tag; embedded scripts can contain
+    # "</body>" inside string literals.
+    cut = html.rfind("</body>")
+    if cut == -1:
+        sys.exit("no </body> to anchor to")
+    html = html[:cut] + block + "\n" + html[cut:]
 
     open(args.output, "w", encoding="utf-8").write(html)
     after = len(html)

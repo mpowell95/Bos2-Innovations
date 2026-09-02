@@ -437,7 +437,12 @@ def main():
              + '<div id="pdfStage"></div>'
              + libs
              + SCRIPT)
-    html = html.replace("</body>", block + "\n</body>", 1)
+    # Anchor to the document's real closing tag: embedded libraries contain
+    # "</body>" inside string literals.
+    cut = html.rfind("</body>")
+    if cut == -1:
+        sys.exit("no </body> to anchor to")
+    html = html[:cut] + block + "\n" + html[cut:]
 
     # The button no longer just prints.
     html = html.replace(">Print / Save PDF<", ">Save PDF<", 1)

@@ -315,3 +315,45 @@ says one thing and the presentation does another. `launchBtn` only guards
 The fix is to check what `expandForPresentation` actually returns, and warn
 naming the sections that contributed no slides. Left alone because it changes
 presentation behaviour rather than export behaviour.
+
+---
+
+# empty_deck_guard.py
+
+Fixes the open bug above. `launchBtn` only tested
+`presentationOrder.length === 0`, so ticking gallery-only sections and choosing
+no slides passed the guard and launched a deck of title page plus disclosure,
+silently, while "On Deck" showed those sections as included.
+
+The guard works out what `expandForPresentation` will actually return and:
+
+  * blocks the launch when nothing would be presented, naming the sections;
+  * otherwise confirms when some sections would contribute nothing, since
+    ticking a gallery-only section and picking no slides is never deliberate.
+
+It listens on document in the capture phase; a listener on the button itself
+would run after the existing one, because listeners on the target fire in
+registration order regardless of the capture flag.
+
+Verified: empty selection blocks, a normal section launches untouched, a gallery
+section with slides launches untouched, a mixed selection confirms, and
+cancelling that confirm does not launch.
+
+## Injection anchoring
+
+All three injectors now anchor to the LAST `</body>`, not the first. jsPDF's
+minified source contains `</body>` inside string literals, so a replace-first
+spliced the guard into the middle of the library and truncated it from 365,673
+to 49,084 characters. The page still loaded; the only symptom was one
+"Invalid or unexpected token" in the console and a guard that never ran.
+
+Check script integrity after any injection:
+
+    python3 - <<'X'
+    import re, subprocess
+    s = open('Toolkit.html', encoding='utf-8').read()
+    for i, b in enumerate(re.findall(r'<script>(.*?)</script>', s, re.S)):
+        open(f'/tmp/b{i}.js','w').write(b)
+        r = subprocess.run(['node','--check',f'/tmp/b{i}.js'], capture_output=True)
+        print(i, 'OK' if r.returncode == 0 else 'FAIL', len(b))
+    X

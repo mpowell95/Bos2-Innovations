@@ -3654,5 +3654,64 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 })();
 </script>
 
+
+<script>
+// ---------------------------------------------------------------------------
+// Guard against launching an empty presentation. See empty_deck_guard.py.
+// ---------------------------------------------------------------------------
+(function(){
+  function selected(id){
+    return !!document.querySelector('input[type="checkbox"][value="' + id + '"]:checked');
+  }
+
+  // Mirrors expandForPresentation: a gallery section yields its ticked slides,
+  // plus itself unless it is gallery-only.
+  function audit(){
+    var chosen = [].slice.call(
+      document.querySelectorAll('#builderList .builder-item > input:checked'));
+    var total = 0, empties = [];
+    chosen.forEach(function(input){
+      var block = document.getElementById(input.value);
+      if (!block) return;
+      if (block.dataset.gallery === 'true'){
+        var slides = [].slice.call(block.querySelectorAll('.ppt-slide-card'))
+                       .filter(function(card){ return card.id && selected(card.id); }).length;
+        var self = block.dataset.galleryOnly === 'true' ? 0 : 1;
+        if (slides + self === 0){
+          empties.push(block.dataset.title || input.value);
+        }
+        total += slides + self;
+      } else {
+        total += 1;
+      }
+    });
+    return {total: total, empties: empties};
+  }
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('#launchBtn');
+    if (!btn) return;
+    var r = audit();
+    if (r.total === 0){
+      e.stopPropagation();
+      e.preventDefault();
+      alert('Nothing would be presented.\n\n' +
+            (r.empties.length
+              ? 'These sections only include the individual slides you tick:\n  • ' +
+                r.empties.join('\n  • ') + '\n\n'
+              : '') +
+            'Expand each one in the checklist above, tick the slides you want, ' +
+            'then launch again.');
+      return;
+    }
+    if (r.empties.length){
+      var ok = confirm('No slides are ticked in:\n  • ' + r.empties.join('\n  • ') +
+                       '\n\nThose sections will not appear in the presentation. Continue anyway?');
+      if (!ok){ e.stopPropagation(); e.preventDefault(); }
+    }
+  }, true);
+})();
+</script>
+
 </body>
 </html>
