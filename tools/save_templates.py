@@ -30,6 +30,12 @@ import sys
 
 BAR = """
 <div class="tpl-bar" id="tplBar">
+<button type="button" class="tpl-help" id="tplHelp" aria-expanded="false"
+aria-label="About templates">?</button>
+<div class="tpl-help-pop" id="tplHelpPop" hidden>
+Custom templates are saved on this browser only. They are not shared with other
+advisors, and they will not follow you to another computer.
+</div>
 <div class="tpl-row">
 <h3>Templates</h3>
 <select id="tplSelect"><option value="">— saved templates —</option></select>
@@ -38,7 +44,7 @@ BAR = """
 <button type="button" class="linklike" id="tplDefault">Set as default</button>
 <button type="button" class="linklike" id="tplDelete">Delete</button>
 </div>
-<p class="tpl-note" id="tplNote">Saved on this browser only.</p>
+<p class="tpl-note" id="tplNote"></p>
 </div>
 """
 
@@ -50,7 +56,37 @@ CSS = """
 .tpl-bar select{ min-width:220px; padding:6px 8px; border:1px solid var(--rule); border-radius:4px;
 font-family:inherit; font-size:13px; color:#33404d; background:#fff; }
 .tpl-note{ margin:8px 0 0; font-size:12px; color:var(--clay); }
+/* Only takes space when there is a status message to show. */
+.tpl-note:empty{ display:none; }
 .tpl-note.warn{ color:#a5471a; }
+
+/* The "saved on this browser" caveat lives behind a ? rather than sitting on
+   screen permanently. */
+.tpl-bar{ position:relative; }
+.tpl-help{
+position:absolute; top:10px; right:12px;
+appearance:none; cursor:pointer;
+width:20px; height:20px; padding:0; border-radius:50%;
+border:1.5px solid var(--clay); background:transparent; color:var(--clay);
+font-family:'Helvetica Neue', Arial, sans-serif; font-size:12px; font-weight:700; line-height:1;
+display:flex; align-items:center; justify-content:center;
+transition:background .12s ease, color .12s ease, border-color .12s ease;
+}
+.tpl-help:hover, .tpl-help[aria-expanded="true"]{
+background:var(--fiord); border-color:var(--fiord); color:#fff;
+}
+.tpl-help:focus-visible{ outline:2px solid var(--tradewind); outline-offset:2px; }
+.tpl-help-pop{
+position:absolute; top:36px; right:12px; z-index:20; width:260px;
+background:var(--cobalt); color:#fff; border-radius:6px; padding:10px 12px;
+font-family:'Helvetica Neue', Arial, sans-serif; font-size:12px; line-height:1.5;
+box-shadow:0 6px 18px rgba(41,51,64,0.28);
+}
+.tpl-help-pop::before{
+content:""; position:absolute; top:-5px; right:6px;
+border-left:5px solid transparent; border-right:5px solid transparent;
+border-bottom:5px solid var(--cobalt);
+}
 """
 
 SCRIPT = r"""
@@ -211,6 +247,27 @@ SCRIPT = r"""
     if (store.def === name) store.def = '';
     if (write(store)){ refresh(); say('Deleted "' + name + '".'); }
   });
+
+  // The caveat sits behind the ? so it is there when wanted and out of the way
+  // otherwise; #tplNote is left for action feedback.
+  var help = document.getElementById('tplHelp');
+  var pop  = document.getElementById('tplHelpPop');
+  if (help && pop){
+    var show = function(on){
+      pop.hidden = !on;
+      help.setAttribute('aria-expanded', String(!!on));
+    };
+    help.addEventListener('click', function(e){
+      e.stopPropagation();
+      show(pop.hidden);
+    });
+    document.addEventListener('click', function(e){
+      if (!pop.hidden && !pop.contains(e.target) && e.target !== help) show(false);
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') show(false);
+    });
+  }
 
   refresh();
 
