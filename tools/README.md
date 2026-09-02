@@ -357,3 +357,55 @@ Check script integrity after any injection:
         r = subprocess.run(['node','--check',f'/tmp/b{i}.js'], capture_output=True)
         print(i, 'OK' if r.returncode == 0 else 'FAIL', len(b))
     X
+
+---
+
+# builder_ux.py
+
+    python3 tools/builder_ux.py IN.html OUT.html --plain-rows --collapsible
+
+`--plain-rows` drops the "Aa" placeholder. `resolveThumb()` fell back to a grey
+tile for any card without a slide image — the three Onboarding Process sub-items
+and the New Client Welcome Email. Those now render as plain checkbox + label
+rows, and a picker whose cards all lack images lays out as a list rather than a
+thumbnail grid. The five pickers that do have thumbnails are untouched.
+
+`--collapsible` separates collapsing from selecting. The nested slide list had
+no collapse control: its visibility was wired straight to the section checkbox,
+so collapsing a 23-slide section meant unchecking it, which called
+removeFromOrder() and dropped the section. A caret now toggles the list
+independently.
+
+The row is a `<label>` wrapping its checkbox, so anything inside it toggles the
+checkbox. The caret is therefore a sibling before the label, positioned into the
+gutter, and verified with a real hit-tested click rather than a synthetic one.
+
+# save_templates.py
+
+    python3 tools/save_templates.py IN.html OUT.html
+
+Saves a named selection — sections, the slides chosen within them and their
+order, and the colleagues — to localStorage, with one markable as the default.
+
+Two things worth knowing:
+
+  * `Array.prototype.slice` cannot read a `Set`; it has no `length`, so
+    `[].slice.call(selectedContactIds)` returned `[]` and templates silently
+    saved no colleagues. Use `Array.from`.
+  * `buildChecklist()` runs only when the Build a Presentation tab is opened, so
+    a default applied at page load has no checkboxes to act on. The default is
+    applied the first time the builder is built, once.
+
+Applying drives the checkboxes and fires their change events rather than writing
+internal state, so the existing handlers stay the single source of truth; the
+recorded orders are restored afterwards, since check order alone does not
+preserve a dragged deck. Ids that no longer exist are skipped and reported.
+
+Storage is per-browser and per-device — not shared between advisors. Export or
+import would be the next step for that.
+
+## Not changed
+
+Alphabetising was already done: both the Meet Your Team roster and the builder's
+colleague picker are in surname order (24 each, verified). Bio cards in the
+presentation stay in seniority order by request.

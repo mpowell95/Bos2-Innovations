@@ -714,6 +714,39 @@ width:auto; height:100%;
 max-width:100%; max-height:100%;
 object-fit:contain;
 }
+
+/* Cards with no slide image render as ordinary checklist rows, matching
+   .builder-item, instead of a thumbnail tile. */
+.gallery-picker-body.plain-list{ display:block; padding:4px 16px 10px; }
+.gallery-check-item.no-thumb{
+flex-direction:row; align-items:center; gap:10px;
+padding:9px 0; border-bottom:1px solid var(--rule);
+font-size:14px; color:#33404d;
+}
+.gallery-picker-body.plain-list .gallery-check-item.no-thumb:last-child{ border-bottom:none; }
+.gallery-check-item.no-thumb .gci-label{ align-items:center; gap:10px; }
+.gallery-check-item.no-thumb input{ width:16px; height:16px; accent-color:var(--fiord); flex-shrink:0; }
+
+/* Caret that shows or hides a section's slide list without changing the
+   selection. It sits outside the row's <label> so clicking it cannot toggle
+   the checkbox. */
+.nested-caret{
+appearance:none; background:none; border:none; cursor:pointer;
+font-size:11px; line-height:1; color:var(--clay);
+padding:0; margin:0 0 -28px -14px; width:14px; height:14px;
+position:relative; top:19px; z-index:2;
+}
+.nested-caret:hover{ color:var(--fiord); }
+.builder-item.has-caret{ padding-left:2px; }
+
+/* Saved selection templates */
+.tpl-bar{ border:1px solid var(--rule); border-radius:8px; padding:12px 16px; margin:0 0 18px; background:var(--vellum); }
+.tpl-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.tpl-bar h3{ margin:0; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--clay); }
+.tpl-bar select{ min-width:220px; padding:6px 8px; border:1px solid var(--rule); border-radius:4px;
+font-family:inherit; font-size:13px; color:#33404d; background:#fff; }
+.tpl-note{ margin:8px 0 0; font-size:12px; color:var(--clay); }
+.tpl-note.warn{ color:#a5471a; }
 </style>
 </head>
 <body>
@@ -1969,6 +2002,18 @@ data-highlights="CERTIFIED FINANCIAL PLANNER®|Accredited Estate Planner|Certifi
 <div id="builderView" class="hidden">
 <p class="builder-intro">Check the sections you want available for this meeting, then launch a clean full-screen walkthrough. You can jump between sections live, or click through in order — nothing outside your selection will show.</p>
 
+
+<div class="tpl-bar" id="tplBar">
+<div class="tpl-row">
+<h3>Templates</h3>
+<select id="tplSelect"><option value="">— saved templates —</option></select>
+<button type="button" class="linklike" id="tplApply">Apply</button>
+<button type="button" class="linklike" id="tplSave">Save current…</button>
+<button type="button" class="linklike" id="tplDefault">Set as default</button>
+<button type="button" class="linklike" id="tplDelete">Delete</button>
+</div>
+<p class="tpl-note" id="tplNote">Saved on this browser only.</p>
+</div>
 <div class="title-page-form">
 <h3>Opening Title Page</h3>
 <p class="tpf-hint">Styled after the official Cerity Partners cover design. This is always shown first when you launch, ahead of whatever sections you select below.</p>
@@ -2091,7 +2136,8 @@ return '<div class="gci-icon-preview">'+CUSTOM_THUMBS[card.id]+'</div>';
 }
 const imgEl = card.querySelector('canvas.cimg');
 if(imgEl) return '<canvas class="cimg" data-i="'+imgEl.dataset.i+'" role="img" aria-label=""></canvas>';
-return '<div class="gci-placeholder">Aa</div>';
+// No image and no icon: show nothing rather than an "Aa" tile that says nothing.
+return '';
 }
 // Per-section custom order of the slides an advisor has selected, so they can be
 // sequenced independently of their natural numeric order in the source deck.
@@ -2178,12 +2224,12 @@ nested.innerHTML = '<p class="order-empty" style="margin:10px 16px;">No individu
 } else {
 nested.innerHTML = '<div class="contact-picker-head"><h3>'+cards.length+' items available</h3><div class="cat-actions">'+
 '<button type="button" data-galleryall="all">Select All</button><button type="button" data-galleryall="none">Clear</button></div></div>'+
-'<div class="gallery-picker-body">'+
+'<div class="gallery-picker-body'+(cards.some(c=>resolveThumb(c)) ? '' : ' plain-list')+'">'+
 cards.map(card=>{
 const sid = card.id, title = card.dataset.title;
 const thumb = resolveThumb(card);
 const checked = selectedGallerySlides.has(sid) ? 'checked' : '';
-return '<label class="gallery-check-item" data-title="'+title+'">'+thumb+'<span class="gci-label">'+
+return '<label class="gallery-check-item'+(thumb ? '' : ' no-thumb')+'" data-title="'+title+'">'+thumb+'<span class="gci-label">'+
 '<input type="checkbox" value="'+sid+'" '+checked+'><span>'+title+'</span></span></label>';
 }).join('')+
 '</div>';
@@ -2193,20 +2239,56 @@ list.appendChild(nested);
 wireGalleryPicker(nested, id);
 }
 
+if(nested){
+// Collapse is independent of selection: the checkbox decides whether the
+// section is in the presentation, the caret only decides whether its slide
+// list is on screen. Previously the two were the same control, so collapsing
+// a long section meant unchecking it and losing the section.
+const caret = document.createElement('button');
+caret.type = 'button';
+caret.className = 'nested-caret';
+caret.setAttribute('aria-label', 'Show or hide the items in this section');
+caret.textContent = '▾';
+row.insertAdjacentElement('beforebegin', caret);
+row.classList.add('has-caret');
+nested.dataset.collapsed = 'false';
+function syncNested(){
+const collapsed = nested.dataset.collapsed === 'true';
+nested.style.display = (cb.checked && !collapsed) ? '' : 'none';
+caret.style.visibility = cb.checked ? '' : 'hidden';
+caret.textContent = collapsed ? '▸' : '▾';
+caret.setAttribute('aria-expanded', String(!collapsed));
+}
+caret.addEventListener('click', (e)=>{
+e.preventDefault(); e.stopPropagation();
+nested.dataset.collapsed = nested.dataset.collapsed === 'true' ? 'false' : 'true';
+syncNested();
+});
+nested.__sync = syncNested;
+syncNested();
+}
 cb.addEventListener('change', ()=>{
 if(cb.checked) addToOrder(id); else removeFromOrder(id);
-if(nested) nested.style.display = cb.checked ? '' : 'none';
+if(nested){
+// Reopen on re-check so the slides are visible again; selections are untouched.
+if(cb.checked) nested.dataset.collapsed = 'false';
+nested.__sync();
+}
 });
 });
 catDiv.appendChild(list);
 container.appendChild(catDiv);
 catDiv.querySelector('[data-act="all"]').onclick=()=>{
 list.querySelectorAll(':scope > .builder-item > input').forEach(i=>{ i.checked=true; addToOrder(i.value); });
-list.querySelectorAll(':scope > .builder-item-nested').forEach(n=>{ n.style.display=''; });
+list.querySelectorAll(':scope > .builder-item-nested').forEach(n=>{
+n.dataset.collapsed='false'; if(n.__sync) n.__sync(); else n.style.display='';
+});
 };
 catDiv.querySelector('[data-act="none"]').onclick=()=>{
 list.querySelectorAll(':scope > .builder-item > input').forEach(i=>{ i.checked=false; removeFromOrder(i.value); });
-list.querySelectorAll(':scope > .builder-item-nested').forEach(n=>{ n.style.display='none'; });
+list.querySelectorAll(':scope > .builder-item-nested').forEach(n=>{
+if(n.__sync) n.__sync(); else n.style.display='none';
+});
 };
 });
 // initialize order from whatever is checked by default (section-level checkboxes only)
@@ -3710,6 +3792,189 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if (!ok){ e.stopPropagation(); e.preventDefault(); }
     }
   }, true);
+})();
+</script>
+
+
+<script>
+// ---------------------------------------------------------------------------
+// Saved selection templates. See save_templates.py.
+// ---------------------------------------------------------------------------
+(function(){
+  var KEY = 'ceritypartners.prospectToolkit.templates.v1';
+  var sel  = document.getElementById('tplSelect');
+  var note = document.getElementById('tplNote');
+  if (!sel) return;
+
+  function say(msg, warn){
+    note.textContent = msg;
+    note.classList.toggle('warn', !!warn);
+  }
+
+  // Private windows and blocked site data throw on access, so never let a
+  // storage failure take the builder down with it.
+  function read(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      var o = raw ? JSON.parse(raw) : null;
+      if (!o || typeof o !== 'object') return {templates:{}, def:''};
+      o.templates = o.templates || {};
+      return o;
+    } catch (e){ return {templates:{}, def:''}; }
+  }
+  function write(store){
+    try { localStorage.setItem(KEY, JSON.stringify(store)); return true; }
+    catch (e){ say('This browser will not let the tool save templates.', true); return false; }
+  }
+
+  function boxes(value){
+    return [].slice.call(
+      document.querySelectorAll('input[type="checkbox"][value="' + value + '"]'));
+  }
+  function set(value, on){
+    // Every copy of a checkbox is updated and notified. The handlers add to a
+    // Set and guard their pushes, so notifying more than once is harmless.
+    boxes(value).forEach(function(cb){
+      if (cb.checked !== on){ cb.checked = on; cb.dispatchEvent(new Event('change', {bubbles:true})); }
+    });
+  }
+
+  function capture(){
+    var slides = {};
+    presentationOrder.forEach(function(id){
+      var block = document.getElementById(id);
+      if (block && block.dataset.gallery === 'true'){
+        slides[id] = (gallerySlideOrder[id] || []).filter(function(s){
+          return selectedGallerySlides.has(s);
+        });
+      }
+    });
+    return {
+      order: presentationOrder.slice(),
+      slides: slides,
+      contacts: Array.from(selectedContactIds),
+      presentedBy: (document.getElementById('tpfPresentedBy') || {}).value || ''
+    };
+  }
+
+  function clearAll(){
+    [].slice.call(document.querySelectorAll('#builderList .builder-item > input:checked'))
+      .forEach(function(cb){ set(cb.value, false); });
+    [].slice.call(document.querySelectorAll('.gallery-check-item input:checked'))
+      .forEach(function(cb){ set(cb.value, false); });
+    [].slice.call(document.querySelectorAll('#contactCheckboxes input:checked'))
+      .forEach(function(cb){ set(cb.value, false); });
+  }
+
+  function apply(t){
+    if (!t) return;
+    clearAll();
+    var missing = [];
+
+    (t.order || []).forEach(function(id){
+      if (!document.getElementById(id)){ missing.push(id); return; }
+      set(id, true);
+    });
+    // Ticking a section builds its nested list, so slides are set afterwards.
+    (t.order || []).forEach(function(id){
+      ((t.slides || {})[id] || []).forEach(function(sid){
+        if (!document.getElementById(sid)){ missing.push(sid); return; }
+        set(sid, true);
+      });
+    });
+    (t.contacts || []).forEach(function(cid){
+      if (!boxes(cid).length){ missing.push(cid); return; }
+      set(cid, true);
+    });
+
+    // Check order does not preserve a deck that was dragged into a custom
+    // sequence, so restore the recorded orders explicitly.
+    presentationOrder = (t.order || []).filter(function(id){ return document.getElementById(id); });
+    Object.keys(t.slides || {}).forEach(function(id){
+      gallerySlideOrder[id] = (t.slides[id] || []).filter(function(s){ return document.getElementById(s); });
+    });
+    renderOrderList();
+
+    var pb = document.getElementById('tpfPresentedBy');
+    if (pb && t.presentedBy) pb.value = t.presentedBy;
+
+    if (missing.length){
+      say('Applied. ' + missing.length + ' item(s) in this template no longer exist in the toolkit and were skipped.', true);
+    } else {
+      say('Applied.');
+    }
+  }
+
+  function refresh(keep){
+    var store = read();
+    var names = Object.keys(store.templates).sort(function(a,b){ return a.localeCompare(b); });
+    sel.innerHTML = '<option value="">— saved templates —</option>' +
+      names.map(function(n){
+        return '<option value="' + n.replace(/"/g,'&quot;') + '">' +
+               n + (store.def === n ? '  (default)' : '') + '</option>';
+      }).join('');
+    if (keep && store.templates[keep]) sel.value = keep;
+  }
+
+  document.getElementById('tplSave').addEventListener('click', function(){
+    if (!presentationOrder.length){ say('Nothing selected to save yet.', true); return; }
+    var name = prompt('Name this template:', sel.value || '');
+    if (name === null) return;
+    name = name.trim();
+    if (!name){ say('Give the template a name.', true); return; }
+    var store = read();
+    if (store.templates[name] && !confirm('Replace the existing template "' + name + '"?')) return;
+    store.templates[name] = capture();
+    if (write(store)){ refresh(name); say('Saved "' + name + '" on this browser.'); }
+  });
+
+  document.getElementById('tplApply').addEventListener('click', function(){
+    var store = read(), name = sel.value;
+    if (!name || !store.templates[name]){ say('Choose a template first.', true); return; }
+    apply(store.templates[name]);
+  });
+
+  document.getElementById('tplDefault').addEventListener('click', function(){
+    var store = read(), name = sel.value;
+    if (!name || !store.templates[name]){ say('Choose a template first.', true); return; }
+    store.def = (store.def === name) ? '' : name;
+    if (write(store)){
+      refresh(name);
+      say(store.def ? '"' + name + '" will be applied when the tool opens.'
+                    : 'Default cleared.');
+    }
+  });
+
+  document.getElementById('tplDelete').addEventListener('click', function(){
+    var store = read(), name = sel.value;
+    if (!name || !store.templates[name]){ say('Choose a template first.', true); return; }
+    if (!confirm('Delete the template "' + name + '"?')) return;
+    delete store.templates[name];
+    if (store.def === name) store.def = '';
+    if (write(store)){ refresh(); say('Deleted "' + name + '".'); }
+  });
+
+  refresh();
+
+  // buildChecklist() runs only when the Build a Presentation tab is opened, so
+  // there is nothing to apply a default to until then. Apply once, the first
+  // time the builder is built, and never again — otherwise it would overwrite
+  // whatever the advisor has since selected.
+  var appliedDefault = false;
+  function applyDefaultOnce(){
+    if (appliedDefault) return;
+    var store = read();
+    if (!store.def || !store.templates[store.def]) { appliedDefault = true; return; }
+    if (!document.querySelector('#builderList .builder-item > input')) return;
+    appliedDefault = true;
+    sel.value = store.def;
+    apply(store.templates[store.def]);
+    say('Applied your default template, "' + store.def + '".');
+  }
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('.modebtn');
+    if (btn && btn.dataset.mode === 'builder') setTimeout(applyDefaultOnce, 0);
+  });
 })();
 </script>
 
