@@ -123,26 +123,6 @@ BUILD=$(find /mnt/skills -path '*trust-faq-guide*/assets/build.py' | head -1)
 python3 "$BUILD" content.json /mnt/user-data/outputs/[Name]_Rev_Trust_FAQ_Guide.html
 ```
 
-Resolve the path with `find`, don't hardcode it — the folder name differs between the test and
-production copies, and `build.py` finds its own template relative to itself. If `find` returns
-more than one hit, use the one whose folder matches this skill's name. If it returns nothing, say
-so rather than guessing a path or writing the HTML yourself.
-
-Pick the filename yourself — `[ClientLastName]_Rev_Trust_FAQ_Guide.html`. Mention it on delivery;
-don't ask permission first.
-
-**What build.py generates, so you never write it:** the whole `<head>`, CSS, JavaScript, the
-Cerity logo, header, toolbar, footer, disclaimer, section wrappers, `data-cat`, chevrons,
-`aria-expanded`/`.open` pairing, open/closed defaults, section numbering, the Quick Reference
-table, the flowchart, and two-column view switching.
-
-**What you write:** the facts. Section titles and categories, questions and answers, Quick
-Reference rows, flowchart stages, tables, banners.
-
-**Do not open `assets/guide-template.html`.** It is 30KB, so a read returns a truncated middle,
-and you have no reason to see it — `build.py` reads it with Python and gets the real bytes.
-Reading it can only tempt you into reproducing something. Same for `build.py` and `CHANGELOG.md`.
-
 ### Content rules
 
 - **Every material fact carries a citation** — `"cite": "§4.2"` on a Quick Reference row, or
@@ -190,9 +170,6 @@ V=$(find /mnt/skills -path '*trust-faq-guide*/assets/verify.py' | head -1)
 # ... re-read the document and mark every line in [GuideName]_verification.md ...
 python3 "$V" check /mnt/user-data/outputs/[GuideName]_verification.md
 ```
-
-If you had to fix `content.json` and rerun `build.py`, it rewrites the worksheet — mark the new
-one. (`verify.py extract content.json out.md` regenerates it by hand if ever needed.)
 
 The worksheet lists every decision-driving claim — names, amounts, ages, succession order,
 distribution standards, flowchart stages, table rows, NOT FOUND flags — with its citation. Mark

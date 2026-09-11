@@ -11,6 +11,15 @@ shell is ever retyped by a model.
 Usage:
     python3 build.py content.json /mnt/user-data/outputs/Name_Rev_Trust_FAQ_Guide.html
 
+    # or split the content across several files, to keep any one of them small:
+    python3 build.py meta.json sections-1.json sections-2.json out.html
+
+The output is always the last argument. Any number of content files may precede it;
+they are merged in order -- list keys (sections, quick_ref, banners,
+document_sections) concatenate, and a plain value set twice is overwritten by the
+later file. Splitting content is the fix for a guide large enough that writing one
+JSON file exhausts a single turn.
+
 On ANY validation failure this script prints the specific problem and writes
 nothing. A partial or unverified guide is never produced.
 """
@@ -524,11 +533,49 @@ def verify_output(html, cls):
         err("OUTPUT: an emoji reached the page")
 
 
+LIST_KEYS = ("sections", "quick_ref", "banners", "document_sections")
+
+
+def load_content(paths):
+    """Merge several content files into one. Lists concatenate in argument order;
+    everything else is last-writer-wins. Splitting content across files keeps any
+    single file small enough to write in one turn."""
+    merged = {}
+    for p in paths:
+        try:
+            part = json.loads(Path(p).read_text())
+        except json.JSONDecodeError as e:
+            print(f"BUILD FAILED - {p} is not valid JSON: {e}", file=sys.stderr)
+            sys.exit(1)
+        if not isinstance(part, dict):
+            print(f"BUILD FAILED - {p} must hold a JSON object", file=sys.stderr)
+            sys.exit(1)
+        for k, v in part.items():
+            if k in LIST_KEYS and isinstance(v, list):
+                merged.setdefault(k, []).extend(v)
+            else:
+                merged[k] = v
+    if "document_sections" in merged:      # dedupe, keep first-seen order
+        seen, out = set(), []
+        for c in merged["document_sections"]:
+            if c not in seen:
+                seen.add(c)
+                out.append(c)
+        merged["document_sections"] = out
+    return merged
+
+
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         print(__doc__.strip(), file=sys.stderr)
         sys.exit(2)
-    content_path, out_path = Path(sys.argv[1]), Path(sys.argv[2])
+    *content_paths, out_arg = sys.argv[1:]
+    out_path = Path(out_arg)
+    if out_path.suffix.lower() != ".html":
+        print(f"BUILD FAILED - the last argument must be the output .html path, "
+              f"got {out_arg!r}", file=sys.stderr)
+        sys.exit(2)
+    content_path = Path(content_paths[0])     # the worksheet is extracted from these
 
     if not TEMPLATE.exists():
         print(f"FATAL: template not found at {TEMPLATE}", file=sys.stderr)
@@ -536,11 +583,7 @@ def main():
     template = TEMPLATE.read_text()
     cls = defined_classes(template)
 
-    try:
-        data = json.loads(content_path.read_text())
-    except json.JSONDecodeError as e:
-        print(f"BUILD FAILED - content JSON is invalid: {e}", file=sys.stderr)
-        sys.exit(1)
+    data = load_content(content_paths)
 
     known = {"title", "eyebrow", "doc_type_dates", "layout", "grantor_labels",
              "binder", "preparer", "prepared", "quick_ref", "banners", "sections",
@@ -606,7 +649,7 @@ def main():
     ws_info = None
     try:
         import verify
-        ws_info = verify.do_extract(content_path, ws_path, quiet=True)
+        ws_info = verify.do_extract(content_paths, ws_path, quiet=True)
     except Exception as e:                                   # never lose the guide
         ws_note = (f"    (could not write the verification worksheet: {e})\n"
                    f"    Run: verify.py extract {content_path} {ws_path}")

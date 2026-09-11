@@ -34,6 +34,10 @@ import re
 import sys
 from pathlib import Path
 
+# Reuse build.py's content merging so a split content set is read identically here.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import build as G  # noqa: E402
+
 # Sections a document type normally contains. Absence is a warning, never a hard
 # failure -- a real document can lack any of these, and the guide is right to omit
 # a section the document does not have. The point is to make an omission visible
@@ -174,7 +178,9 @@ def cross_checks(data):
 
 
 def do_extract(content_path, out_path, quiet=False):
-    data = json.loads(Path(content_path).read_text())
+    """content_path may be one path or a list of them, matching build.py's merge."""
+    paths = content_path if isinstance(content_path, (list, tuple)) else [content_path]
+    data = G.load_content(paths)
     cl = claims(data)
     warn = cross_checks(data)
     idx = [c.strip() for c in data.get("document_sections") or []]
@@ -221,7 +227,54 @@ def do_extract(content_path, out_path, quiet=False):
           f"{Path(out_path).name}")
 
 
-def do_check(path):
+MARK_LINE = re.compile(r"^\s*(\d{1,3}|signoff)\s+([x!?])\s*(?:--\s*)?(.*)$", re.I)
+
+
+def apply_marks(ws_path, marks_path):
+    """Apply a compact marks file to the worksheet, in place.
+
+    Writing "001 x" lines costs a fraction of re-emitting a 40-line worksheet, which
+    matters when the whole guide has to be produced inside one turn.
+    """
+    ws = Path(ws_path).read_text()
+    applied, unknown = 0, []
+    for raw in Path(marks_path).read_text().split("\n"):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        m = MARK_LINE.match(raw)
+        if not m:
+            unknown.append(raw.strip())
+            continue
+        ident, mark, note = m.group(1).lower(), m.group(2).lower(), m.group(3).strip()
+        if ident == "signoff":
+            ws = re.sub(r"^- \[ \] (Every )", rf"- [{mark}] \1", ws, flags=re.M)
+            applied += 1
+            continue
+        ident = ident.zfill(3)
+        pat = re.compile(rf"^- \[.\] {ident} \|(.*)$", re.M)
+        if not pat.search(ws):
+            unknown.append(f"{ident} (no such claim in the worksheet)")
+            continue
+        def sub(mo):
+            line = f"- [{mark}] {ident} |{mo.group(1)}"
+            return line + (f"  -- {note}" if note else "")
+        ws = pat.sub(sub, ws, count=1)
+        applied += 1
+    if unknown:
+        print("MARKS FILE HAS LINES I CANNOT READ - nothing was applied.\n",
+              file=sys.stderr)
+        for u in unknown:
+            print("  * " + u, file=sys.stderr)
+        print('\nUse one per line: "<claim number> <x|!|?> [-- note]", or '
+              '"signoff x".', file=sys.stderr)
+        sys.exit(1)
+    Path(ws_path).write_text(ws)
+    print(f"    applied {applied} mark(s) to {Path(ws_path).name}")
+
+
+def do_check(path, marks=None):
+    if marks:
+        apply_marks(path, marks)
     text = Path(path).read_text()
     marks = CLAIM_RE.findall(text)
     if not marks:
@@ -271,15 +324,16 @@ def main():
         print(__doc__.strip(), file=sys.stderr)
         sys.exit(2)
     if sys.argv[1] == "extract":
-        if len(sys.argv) != 4:
-            print("usage: verify.py extract content.json worksheet.md", file=sys.stderr)
+        if len(sys.argv) < 4:
+            print("usage: verify.py extract content.json [more.json ...] worksheet.md",
+                  file=sys.stderr)
             sys.exit(2)
-        do_extract(sys.argv[2], sys.argv[3])
+        do_extract(sys.argv[2:-1], sys.argv[-1])
     else:
-        if len(sys.argv) != 3:
-            print("usage: verify.py check worksheet.md", file=sys.stderr)
+        if len(sys.argv) not in (3, 4):
+            print("usage: verify.py check worksheet.md [marks.txt]", file=sys.stderr)
             sys.exit(2)
-        do_check(sys.argv[2])
+        do_check(sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else None)
 
 
 if __name__ == "__main__":

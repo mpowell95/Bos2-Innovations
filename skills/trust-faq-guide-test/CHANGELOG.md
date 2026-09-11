@@ -8,6 +8,38 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.6 — 2026-09 — Fit the work inside one turn
+
+Reported from real use: running the skill exhausts the turn and needs a Continue click. The cause
+is output volume, not reading volume — a 15-section trust's `content.json` is 30KB+ that the model
+must emit in one go, and then marking a 40-line worksheet means re-emitting the whole file.
+
+**`build.py` and `verify.py extract` now accept the content split across several files.** The
+output is the last argument; any number of content files precede it. List keys (`sections`,
+`quick_ref`, `banners`, `document_sections`) concatenate in order, so the result is byte-identical
+to one combined file — verified. A long guide can now be written a few sections per file, across
+turns, instead of racing to finish one enormous write that may truncate.
+
+**`verify.py check` accepts a compact marks file.** `001 x` / `020 ? -- reason` / `signoff x`, one
+line per claim, applied into the worksheet before gating so the worksheet stays the delivered
+record. In testing, 217 bytes of marks replaced re-emitting a 3,533-byte worksheet. A marks file
+with any unparseable line applies nothing and says which line, so it can never half-mark.
+
+Both are documented in `references/large-guides.md`, pointed to from Step 4 — which also brought
+SKILL.md down to 13,762 characters, its most headroom yet (~2,300).
+
+Caught while building this: `verify.py` used `G.load_content` without importing `build`. The
+`import build as G` line existed in `build_binder.py`, not `verify.py`. It surfaced as build.py
+reporting "could not write the verification worksheet: name 'G' is not defined" and falling back
+to telling the model to extract manually — the guide was never at risk, which is what that
+try/except is for.
+
+Verified from the shipped package: split content, auto-written worksheet, marks file apply and
+gate, plus the full regression — five build modes, binder, 14 build negatives, 6 gate behaviours,
+3 marks-file negatives.
+
+---
+
 ## v2.5 — 2026-09 — Step 5 can no longer be skipped by forgetting
 
 Two fixes aimed at the one thing still untested: whether a model actually follows the new
