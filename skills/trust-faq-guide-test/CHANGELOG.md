@@ -8,6 +8,33 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.4 — 2026-09 — Package hygiene audit before replacing the live skill
+
+A consistency audit of the whole package before promotion, which found one live trap and two
+files that had no business being in an installed skill.
+
+- **`section-guide.md` still told the model to build sections from "the component snippets and
+  `data-cat` mapping in `html-shell.md`", and cited "SKILL.md Step 4A".** A stale pointer, from
+  v1.x, aimed straight back at the 50KB file whose truncation caused every drift bug — and at a
+  step that no longer exists. Rewritten to point at `content-schema.md` and Step 4. This is the
+  clearest illustration of why the audit was worth doing: the disease was cured everywhere except
+  in a sentence telling the model where to go.
+- **`_html-shell-ARCHIVE.md` (52KB) removed from the shipped package.** Nothing reads it once the
+  pointer above is fixed. It stays in the source repo for historical reference. Leaving a 52KB
+  truncating markdown file inside an installed skill is an invitation, however many warnings its
+  header carries.
+- **`CHANGELOG.md` (38KB) removed from the shipped package** for the same reason. It lives in the
+  repo. SKILL.md's header now says so instead of pointing at a file that isn't there.
+
+Result: every file a model can read in the installed skill is under the ~16,000-character read
+limit — the largest is SKILL.md at 14,758. The five files above the limit are templates and
+scripts that only Python opens.
+
+Verified from the shipped package after removal: all five build modes, verify extract and check,
+build.py 14/14 negative tests, build_binder.py 8/8, verify.py 6/6 gate behaviours.
+
+---
+
 ## v2.3 — 2026-09 — Verification pass: the content gets checked, not just the formatting
 
 Everything before this made the guide reliably well-formed. None of it touched the risk that

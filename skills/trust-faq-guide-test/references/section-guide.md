@@ -1,6 +1,6 @@
 # Section Guide — Content Requirements by Document Type
 
-Read this in Step 3 once the document type is confirmed. It defines **which sections to include and what each must contain**. Build the sections using the component snippets and `data-cat` mapping in `html-shell.md`. All universal rules from SKILL.md Step 4A apply to every section: citations on every material fact, tables (never prose) for distributions/trustees/agents/charities/schedules, `[NOT FOUND]` for anything absent, no fabrication, no emoji, and the independent-trustee/self-dealing rule.
+Read this in Step 3 once the document type is confirmed. It defines **which sections to include and what each must contain**. You do not build any HTML — you write the section titles, `cat` values, questions and answers into `content.json` per `assets/content-schema.md`, and `build.py` renders them. Every rule in SKILL.md Step 4 applies to each section: a citation on every material fact, tables (never prose) for distributions/trustees/agents/charities/schedules, a NOT FOUND flag for anything absent, no fabrication, no emoji, and the independent-trustee/self-dealing rule.
 
 Quick Reference is always §1 (a non-collapsible `.quick-ref`); collapsible sections start at §2. Omit any section that does not apply — don't leave numbering gaps.
 

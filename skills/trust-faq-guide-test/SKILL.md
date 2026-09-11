@@ -15,14 +15,15 @@ description: >
 ---
 
 <!--
-v2.0 TEST COPY — named trust-faq-guide-test so it can sit alongside the live
+v2.3 TEST COPY — named trust-faq-guide-test so it can sit alongside the live
 trust-faq-guide. Both are installed during testing; if the wrong one fires, ask for
 "the trust-faq-guide-test skill" by name.
 
 TO PROMOTE TO PRODUCTION: change the frontmatter `name:` and the folder name to
 trust-faq-guide. Nothing else — the build command resolves its own path.
 
-v2.0 — see CHANGELOG.md for history. Do not read CHANGELOG.md at run time.
+Version history is in CHANGELOG.md in the source repo. It is deliberately NOT shipped in the
+packaged skill: it is 38KB, and nothing at run time should read a file that large.
 
 NOTE FROM MATT POWELL: Works well if you upload both a husband and wife's rev trusts and say
 "build a FAQ." For a whole family's documents, ask for a "family binder."
@@ -283,8 +284,10 @@ What neither can check, and you must:
 
 ## Maintaining this skill
 
-The shell is `assets/guide-template.html`, rendered by `assets/build.py`. Edit those, never the
-archive.
+See `assets/README.md`. The shells are `assets/guide-template.html` and
+`assets/binder-template.html`, rendered by `build.py` and `build_binder.py`. Edit those.
+`references/_html-shell-ARCHIVE.md` is the pre-v2.0 shell spec, kept in the repo for historical
+reference only — it is not shipped in the packaged skill and nothing reads it.
 
 **Before writing any changelog entry, verify the change is actually in the file you claim to have
 changed.** From v1.6 to v1.18 this skill accumulated five separate entries describing fixes that
