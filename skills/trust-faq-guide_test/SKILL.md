@@ -1,5 +1,5 @@
 ---
-name: trust-faq-guide
+name: trust-faq-guide_test
 description: >
   Creates estate planning document guides in two formats: (1) an interactive HTML FAQ with
   citations and collapsible sections, or (2) a simplified client-facing PowerPoint deck (~10
@@ -15,6 +15,13 @@ description: >
 ---
 
 <!--
+v2.0 TEST COPY — named trust-faq-guide_test so it can sit alongside the live
+trust-faq-guide. Both are installed during testing; if the wrong one fires, ask for
+"the trust-faq-guide_test skill" by name.
+
+TO PROMOTE TO PRODUCTION: change the frontmatter `name:` and the folder name to
+trust-faq-guide. Nothing else — the build command resolves its own path.
+
 v2.0 — see CHANGELOG.md for history. Do not read CHANGELOG.md at run time.
 
 NOTE FROM MATT POWELL: Works well if you upload both a husband and wife's rev trusts and say
@@ -74,10 +81,10 @@ it; don't pass it.
 
 **Uploaded to chat** — read with your document-reading tools (use the `pdf` skill for PDFs).
 
-**In Box** — with a file ID, call `Box:get_file_content`. With a filename, `Box:search_files_keyword`
-first; if several results, show them and ask which. If content comes back empty or garbled, it's a
-scanned PDF — run OCR yourself via the `pdf` skill (rasterize, then OCR). Only tell the user the
-file can't be processed if OCR itself fails.
+**In Box** — with a file ID, call `Box:get_file_content`. With a filename,
+`Box:search_files_keyword` first; if several hits, show them and ask which. If content is empty or
+garbled it's a scanned PDF — run OCR yourself via the `pdf` skill (rasterize, then OCR). Only tell
+the user the file can't be processed if OCR itself fails.
 
 Read the **full text**. Never rely on previews or first/last pages.
 
@@ -149,9 +156,14 @@ Read **`assets/content-schema.md`** for the full field reference, then write the
 run:
 
 ```
-python3 /mnt/skills/plugins/trust-faq-guide/assets/build.py content.json \
-        /mnt/user-data/outputs/[Name]_Rev_Trust_FAQ_Guide.html
+BUILD=$(find /mnt/skills -path '*trust-faq-guide*/assets/build.py' | head -1)
+python3 "$BUILD" content.json /mnt/user-data/outputs/[Name]_Rev_Trust_FAQ_Guide.html
 ```
+
+Resolve the path with `find`, don't hardcode it — the folder name differs between the test and
+production copies, and `build.py` finds its own template relative to itself. If `find` returns
+more than one hit, use the one whose folder matches this skill's name. If it returns nothing, say
+so rather than guessing a path or writing the HTML yourself.
 
 Pick the filename yourself — `[ClientLastName]_Rev_Trust_FAQ_Guide.html`. Mention it on delivery;
 don't ask permission first.
@@ -164,10 +176,9 @@ table, the flowchart, and two-column view switching.
 **What you write:** the facts. Section titles and categories, questions and answers, Quick
 Reference rows, flowchart stages, tables, banners.
 
-**Do not open `assets/guide-template.html`.** It is 30KB — a read returns a truncated middle, and
-you have no reason to see it. `build.py` reads it with Python, which gets the real bytes. Reading
-it can only tempt you into reproducing something; it cannot help you. Same for `build.py` itself
-and `CHANGELOG.md`.
+**Do not open `assets/guide-template.html`.** It is 30KB, so a read returns a truncated middle,
+and you have no reason to see it — `build.py` reads it with Python and gets the real bytes.
+Reading it can only tempt you into reproducing something. Same for `build.py` and `CHANGELOG.md`.
 
 ### Content rules
 
@@ -183,18 +194,9 @@ and `CHANGELOG.md`.
   stage and the distribution table must say an independent trustee makes all distribution
   decisions — the beneficiary cannot direct distributions to themselves. (Per Alexander Gross
   feedback on the Pappalardo guide, 2025-05-19.)
-- **Tables, not prose,** for distributions, trustees/executors, charities, withdrawal schedules,
-  and agent succession.
-- **Amounts** in `<span class="amt">`; lapsing gifts in `<span class="amt-lapse">`; inapplicable
-  provisions in `<span class="na">`.
-- **No emojis.** The build rejects them. Banner icons are generated for you.
-- Only these inline classes are permitted in authored text: `amt`, `amt-lapse`, `na`,
-  `not-found`, `section-ref`, `doc-badge`, `qr-people`, `qr-hl`. Anything else fails the build.
-- **Will + Trust combined:** add a top-level `banners` entry identifying both documents, and where
-  a pour-over exists, cross-reference it from the trust's "Administration Upon Death" section.
-- **Personal-documents bundle:** one section per document, then close with a "How These Documents
-  Work Together" section — a table mapping life events (competent -> incapacitated financial ->
-  incapacitated medical -> death) to the governing document and who acts.
+
+Formatting rules — tables vs. prose, amount/lapse/N-A spans, the permitted class list, and the
+Will+Trust and personal-bundle section patterns — are in `assets/content-schema.md`.
 
 ### If the build fails
 

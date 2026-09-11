@@ -37,6 +37,21 @@ Any other class fails the build — it would render unstyled. Never use `<img>`,
 `mask:`, external stylesheets or emoji; all are rejected (the first three are silently blocked
 by the hosting platform's CSP, so they fail invisibly in the browser rather than loudly).
 
+## Content rules
+
+- **Tables, not prose,** for distributions, trustees/executors, charities, withdrawal schedules
+  and agent succession. Use a `table` block.
+- **Amounts and fractions** in `<span class="amt">`; a gift that lapses in
+  `<span class="amt-lapse">`; an inapplicable provision in `<span class="na">`.
+- **No emojis** — the build rejects them. Banner and print icons are generated for you.
+- **Will + Trust combined:** add a top-level `banners` entry identifying both documents, and
+  where a pour-over clause exists, cross-reference it from the trust's "Administration Upon
+  Death" section.
+- **Personal-documents bundle:** one section per document (Will/Codicil, POA, Health Care Proxy,
+  HIPAA), then close with a "How These Documents Work Together" section — a `table` block mapping
+  life events (competent -> incapacitated financial -> incapacitated medical -> death) to the
+  governing document and who acts.
+
 ## `quick_ref` rows
 
 ```json
