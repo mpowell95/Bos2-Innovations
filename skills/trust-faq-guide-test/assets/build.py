@@ -160,10 +160,22 @@ EMOJI = re.compile(
 )
 
 ERRORS = []
+WARNINGS = []
 
 
 def err(msg):
+    """A problem that makes the guide WRONG. Refuses the build."""
     ERRORS.append(msg)
+
+
+def warn(msg):
+    """A problem that makes the guide SUBOPTIMAL. Printed, never a rejection.
+
+    Rejecting a valid guide costs a full rewrite of the content -- the most expensive
+    part of a run. Anything that is merely not ideal belongs here, so the next guide
+    is better rather than this one being written twice.
+    """
+    WARNINGS.append(msg)
 
 
 def die():
@@ -234,10 +246,10 @@ def check_quote(quote, where, cite=None):
         return False
     q = normalise(str(quote))
     words = [w for w in re.findall(r"[a-z']+", q) if len(w) > 1]
-    if len(q) < 25 or len(words) < 4:
-        err(f'{where}: quote "{quote}" is too thin to confirm anything - give a real '
-            f"clause from the document (25+ characters, at least four words). A "
-            f"fragment like a number or a defined term proves nothing.")
+    if len(q) < 18 or len(words) < 3:
+        err(f'{where}: quote "{quote}" is too thin to confirm anything - give a clause '
+            f"from the document, not a fragment. A bare number or single defined term "
+            f"proves nothing.")
         QUOTES.append((False, quote, where, cite))
         return False
     ok = q in SRC["text"]
@@ -544,16 +556,12 @@ def check_size(sections):
     """
     qs = sum(len(s.get("items") or []) for s in sections)
     if len(sections) > MAX_SECTIONS:
-        err(f"{len(sections)} sections is too many (limit {MAX_SECTIONS}). Merge or drop "
-            f"the ones an advisor would not open. Completeness is not the goal.")
+        warn(f"{len(sections)} sections, against a target of {MAX_SECTIONS}. Not a "
+             f"failure - the guide is fine. Next time cover what an advisor opens; "
+             f"completeness is not the goal and length is what makes a run slow.")
     if qs > MAX_QUESTIONS:
-        err(f"{qs} questions is too many (limit {MAX_QUESTIONS}). Keep the ones someone "
-            f"actually asks on a call; a boilerplate provision needs no Q&A of its own.")
-    for s in sections:
-        n = len(s.get("items") or [])
-        if n > 6:
-            err(f'section "{s.get("title","")}" has {n} questions (limit 6). Split it or '
-                f"cut the ones that restate the document rather than answering a question.")
+        warn(f"{qs} questions, against a target of {MAX_QUESTIONS}. A boilerplate "
+             f"provision needs no Q&A of its own.")
 
 
 def render_sections(sections, cls):
@@ -800,10 +808,9 @@ def main():
 
     idx0 = data.get("document_sections") or []
     if len(idx0) > 60:
-        err(f"document_sections has {len(idx0)} entries. List the document's ARTICLES or "
-            f"top-level sections, not every sub-paragraph - a 169-entry index turns "
-            f"coverage into noise and pushes the guide toward citing everything instead "
-            f"of what matters.")
+        warn(f"document_sections has {len(idx0)} entries, so the coverage report below is "
+             f"mostly noise. Articles or top-level sections are enough; sub-paragraphs "
+             f"make it look as though the guide is missing things it should leave out.")
 
     die()  # stop before rendering if the shape is wrong
 
@@ -887,11 +894,11 @@ def main():
         print("      This is not a target. Most documents have sections a guide should "
               "leave out.")
         print("      Only add one if an advisor would ask about it.")
-    warn = cross_checks(data)
-    if warn:
+    xchecks = cross_checks(data) + WARNINGS
+    if xchecks:
         print()
         print("    CHECK THESE BEFORE DELIVERING:")
-        for w in warn:
+        for w in xchecks:
             for i, line in enumerate(re.findall(r".{1,84}(?:\s|$)", w)):
                 print(("      " if i == 0 else "        ") + line.strip())
     else:

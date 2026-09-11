@@ -8,6 +8,37 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v3.2 — 2026-09 — A valid guide is never rejected
+
+v3.1 was meant to make runs shorter. It made them longer, and the reason is a mistake worth
+recording.
+
+I added three checks that rejected the guide **after** it was fully written: more than 12 sections
+or 28 questions, a `document_sections` index over 60 entries, and a tighter minimum quote length.
+None of those describe a guide that is *wrong*. 15 sections is a valid guide. The Krasker trust
+really does have 169 sub-sections. A 15-character quote may well be a real clause. But each check
+refused the finished content, and refusing content means writing all of it again — the single most
+expensive part of a run. I did not make the guide shorter; I made it get written twice.
+
+`build.py` now separates the two kinds of problem:
+
+- **`err()` — the guide would be wrong.** A fabricated quote, a missing quote on a citation, an
+  undefined class, a broken logo, a CSP-blocked asset, a citation with no index entry. 47 of these.
+  They refuse the build, because shipping would be worse than rewriting.
+- **`warn()` — the guide is fine but not ideal.** Longer than the target, an over-granular index.
+  Printed under "CHECK THESE BEFORE DELIVERING" so the next guide is better. They never reject.
+
+The quote minimum went back from 25 characters and four words to 18 and three, which rejects a bare
+number or a lone defined term without rejecting short real clauses.
+
+The size targets stay in SKILL.md as guidance, where they cost nothing. A limit stated before
+writing is free; the same limit enforced after writing costs a full rewrite.
+
+Verified: 13 correctness negatives still refused, and the two cases v3.1 wrongly rejected — a
+15-section 45-question guide and a 198-entry index — now build with a note.
+
+---
+
 ## v3.1 — 2026-09 — Worksheet removed; the guide got too long and too slow
 
 A real v3.0 run took **12 minutes**. Reported as far too slow, correctly. Two causes, both mine.

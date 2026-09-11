@@ -10,11 +10,12 @@ Unknown keys are rejected. On any failure the build prints the problem and write
 
 ## Keep the guide short
 
-At most **12 sections, 28 questions, 6 questions per section** — the build refuses more. Cover what
+Aim at **12 sections and 28 questions** — a longer guide builds, with a note, but length is what
+makes a run slow. Cover what
 an advisor asks on a call. A boilerplate provision needs no Q&A of its own; the document is still
 there for whatever the guide leaves out. `document_sections` lists the document's **articles or
-top-level sections**, not every sub-paragraph — a 169-entry index makes coverage meaningless and
-pushes the guide toward citing everything.
+top-level sections**, not every sub-paragraph — a 169-entry index makes the coverage report
+meaningless and makes the guide look as though it is missing things it should leave out.
 
 ## Top level
 
