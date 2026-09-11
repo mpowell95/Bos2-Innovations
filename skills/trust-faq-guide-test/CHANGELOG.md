@@ -23,8 +23,12 @@ files that had no business being in an installed skill.
   pointer above is fixed. It stays in the source repo for historical reference. Leaving a 52KB
   truncating markdown file inside an installed skill is an invitation, however many warnings its
   header carries.
-- **`CHANGELOG.md` (38KB) removed from the shipped package** for the same reason. It lives in the
-  repo. SKILL.md's header now says so instead of pointing at a file that isn't there.
+- **`CHANGELOG.md` stays in the shipped package.** It was briefly removed on the same reasoning
+  and that was wrong: size was never the hazard. `html-shell.md` was dangerous because it held
+  copyable CSS and instructions *and* something pointed at it. A changelog is history — nothing
+  points to it, nothing in it can be copied into an output, and an unread file costs no context.
+  It also has real value in the package, since anyone installing the skill does not have this
+  repo. SKILL.md says not to read it at run time and leaves it at that.
 
 Result: every file a model can read in the installed skill is under the ~16,000-character read
 limit — the largest is SKILL.md at 14,758. The five files above the limit are templates and

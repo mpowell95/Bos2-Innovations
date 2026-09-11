@@ -22,8 +22,8 @@ trust-faq-guide. Both are installed during testing; if the wrong one fires, ask 
 TO PROMOTE TO PRODUCTION: change the frontmatter `name:` and the folder name to
 trust-faq-guide. Nothing else — the build command resolves its own path.
 
-Version history is in CHANGELOG.md in the source repo. It is deliberately NOT shipped in the
-packaged skill: it is 38KB, and nothing at run time should read a file that large.
+Version history is in CHANGELOG.md, shipped alongside this file. Do not read it at run time —
+it is 38KB and purely historical. It is there for whoever maintains this skill next.
 
 NOTE FROM MATT POWELL: Works well if you upload both a husband and wife's rev trusts and say
 "build a FAQ." For a whole family's documents, ask for a "family binder."
