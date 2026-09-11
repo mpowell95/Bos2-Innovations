@@ -173,7 +173,7 @@ def cross_checks(data):
     return warn
 
 
-def do_extract(content_path, out_path):
+def do_extract(content_path, out_path, quiet=False):
     data = json.loads(Path(content_path).read_text())
     cl = claims(data)
     warn = cross_checks(data)
@@ -210,6 +210,8 @@ def do_extract(content_path, out_path):
           "- [ ] Every `[?]` is listed in the post-output notes for the advisor.",
           ""]
     Path(out_path).write_text("\n".join(L))
+    if quiet:
+        return {"claims": len(cl), "warnings": warn}
     print(f"OK  wrote {out_path}")
     print(f"    {len(cl)} claims to verify"
           + (f"  |  {len(warn)} cross-check warning(s)" if warn else ""))

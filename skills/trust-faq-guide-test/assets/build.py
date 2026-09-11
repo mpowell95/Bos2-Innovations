@@ -598,6 +598,19 @@ def main():
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html)
+
+    # Build the verification worksheet here rather than leaving it as a separate
+    # command to remember. Step 5 can now only be skipped deliberately, not by
+    # forgetting a step.
+    ws_path = out_path.with_name(out_path.stem + "_verification.md")
+    ws_info = None
+    try:
+        import verify
+        ws_info = verify.do_extract(content_path, ws_path, quiet=True)
+    except Exception as e:                                   # never lose the guide
+        ws_note = (f"    (could not write the verification worksheet: {e})\n"
+                   f"    Run: verify.py extract {content_path} {ws_path}")
+        ws_path = None
     logo = re.search(r'<svg[^>]*2054\.13.*?</svg>', html, re.S).group(0)
     print(f"OK  wrote {out_path}  ({len(html):,} bytes)")
     print(f"    layout={layout}  sections={len(data['sections'])}  "
@@ -619,6 +632,17 @@ def main():
     nf = html.count("not-found")
     if nf:
         print(f"    {nf} provision(s) flagged NOT FOUND - list them in the post-output notes")
+    print()
+    if ws_path and ws_info:
+        print("    NOT DELIVERABLE YET - the content is unverified.")
+        print(f"    Wrote {ws_path.name}: {ws_info['claims']} claims to check against "
+              f"the document.")
+        for w in ws_info["warnings"]:
+            print(f"      ! {w.split(':')[0]} - see the top of the worksheet")
+        print("    Mark every line, then run:")
+        print(f"      verify.py check {ws_path}")
+    else:
+        print(ws_note)
 
 
 if __name__ == "__main__":

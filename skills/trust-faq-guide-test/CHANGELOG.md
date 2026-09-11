@@ -8,6 +8,41 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.5 — 2026-09 — Step 5 can no longer be skipped by forgetting
+
+Two fixes aimed at the one thing still untested: whether a model actually follows the new
+instructions.
+
+**The worksheet is now written by `build.py` itself**, next to the guide as
+`[GuideName]_verification.md`. Verification was a separate command to remember, and a required
+step a model can forget is a step that will sometimes not happen. Now it always exists, and the
+build ends with:
+
+```
+NOT DELIVERABLE YET - the content is unverified.
+Wrote Krasker_Rev_Trust_FAQ_Guide_verification.md: 22 claims to check against the document.
+  ! INTERESTED TRUSTEE - see the top of the worksheet
+Mark every line, then run:
+  verify.py check .../Krasker_Rev_Trust_FAQ_Guide_verification.md
+```
+
+Skipping Step 5 now takes a deliberate decision to ignore that, rather than simply not thinking
+of it. A rebuild rewrites the worksheet, so marks always correspond to the guide as it stands.
+
+**An instruction walkthrough** — reading SKILL.md as a model would and following it literally —
+caught a contradiction introduced by that very change: Step 5 still said to run
+`verify.py extract content.json verification.md`, which would have produced a second worksheet
+under a different name while the real one sat beside the guide. Step 5 now says the worksheet
+already exists and only needs marking and gating, with manual re-extraction noted as the
+exception. Step 4 also now names `document_sections` in its own text rather than only in
+content-schema.md, since it is the newest required key.
+
+Verified end to end as the instructions read: build writes the guide and the worksheet; the gate
+blocks it unmarked; marking it passes; a rebuild resets it to unmarked. Plus the full regression —
+five build modes, 14 build negatives, 6 gate behaviours — from the shipped package.
+
+---
+
 ## v2.4 — 2026-09 — Package hygiene audit before replacing the live skill
 
 A consistency audit of the whole package before promotion, which found one live trap and two

@@ -114,8 +114,9 @@ Branch: HTML guide -> Steps 4 and 5. PowerPoint -> Step 6. Family binder -> Step
 
 ## Step 4 — Write `content.json` and run the build
 
-Read **`assets/content-schema.md`** for the full field reference, then write the content file and
-run:
+Read **`assets/content-schema.md`** for the full field reference — including `document_sections`,
+the list of every heading you found in the document, which is required and which every citation is
+checked against. Then write the content file and run:
 
 ```
 BUILD=$(find /mnt/skills -path '*trust-faq-guide*/assets/build.py' | head -1)
@@ -181,12 +182,17 @@ rather than delivering something unverified.
 `build.py` guarantees the guide is well formed. It cannot tell whether a name, amount, age or
 citation is *right*. That is this step.
 
+`build.py` already wrote the worksheet next to the guide, named
+`[GuideName]_verification.md`. Mark it, then gate on it:
+
 ```
 V=$(find /mnt/skills -path '*trust-faq-guide*/assets/verify.py' | head -1)
-python3 "$V" extract content.json verification.md      # builds the worksheet
-# ... re-read the document and mark every line ...
-python3 "$V" check verification.md                     # gate
+# ... re-read the document and mark every line in [GuideName]_verification.md ...
+python3 "$V" check /mnt/user-data/outputs/[GuideName]_verification.md
 ```
+
+If you had to fix `content.json` and rerun `build.py`, it rewrites the worksheet — mark the new
+one. (`verify.py extract content.json out.md` regenerates it by hand if ever needed.)
 
 The worksheet lists every decision-driving claim — names, amounts, ages, succession order,
 distribution standards, flowchart stages, table rows, NOT FOUND flags — with its citation. Mark
@@ -204,7 +210,7 @@ The worksheet also opens with "Check these first" — cross-checks that need no 
 (interested-trustee conflicts, sections this document type normally has but the guide omits,
 document sections never cited). Each explains itself; work them before the claims.
 
-Deliver `verification.md` alongside the guide. It is the record that the guide was checked.
+Deliver the worksheet alongside the guide. It is the record that the guide was checked.
 
 ---
 
@@ -226,7 +232,7 @@ back-to-index crumb is generated.
 
 ## Step 8 — Deliver
 
-1. Present the file(s) with `present_files`, including `verification.md`.
+1. Present the file(s) with `present_files`, including the verification worksheet.
 2. **Offer Box upload:** "Would you like me to upload this to the client's Box folder? If so,
    share the Box folder ID." Given an ID, read the saved file and call `Box:upload_file` with
    `file_name`, `parent_folder_id`, and `file_content`. For a binder, upload the index and every
@@ -277,7 +283,7 @@ What neither can check, and you must:
 - [ ] **Independent trustee** — no "full discretion" where a beneficiary is trustee
 - [ ] **Cross-document** — pour-over / codicil supersession / agent roles noted
 - [ ] **Guardian (Wills)** — minor children addressed or flagged NOT FOUND
-- [ ] `verification.md` delivered with the guide, and every `[?]` listed in the notes
+- [ ] the verification worksheet delivered with the guide, every `[?]` listed in the notes
 - [ ] Post-output notes posted with all six sections
 
 ---
