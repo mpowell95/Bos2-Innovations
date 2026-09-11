@@ -8,6 +8,50 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v3.1 — 2026-09 — Worksheet removed; the guide got too long and too slow
+
+A real v3.0 run took **12 minutes**. Reported as far too slow, correctly. Two causes, both mine.
+
+### The worksheet was removed
+
+It never earned its cost. In v2.9 it took 72 hand marks and found zero errors. In v3.0 it was
+cheap but wrong: 15 of its 62 pre-marked claims were `[x]` on a quote belonging to a different
+fact, because one block-level quote was allowed to cover a whole table or flowchart. Claim 014,
+"Now — Both Spouses Living: each Grantor can receive all income on request", came back confirmed
+by "I give my Residuary Trust Fund to the Trustees of the Marital Trust" — a provision about
+death. A record that says verified where nothing was verified is worse than no record, which is
+the standard this skill set for itself.
+
+So the worksheet is gone. What replaces it is the part that always had teeth: **every citation
+carries a verbatim quote, and the build confirms each one against the document text.** That cannot
+be rubber-stamped and costs nothing to check. The cross-checks (interested trustee, expected
+sections) and citation coverage now print at the end of the build under "CHECK THESE BEFORE
+DELIVERING". `assets/verify.py` is deleted; Step 5 is gone and the later steps renumbered.
+
+Quote rules tightened at the same time: a quote must be 25+ characters and four real words, so a
+fragment like "one-half (1/2)" no longer counts as confirmation.
+
+### The guide had grown twice as long as it should be
+
+v1.18 produced 31 questions. v3.0 produced **46 questions across 15 sections, 94 citations, 79KB**
+— and `document_sections` came back with **169 sub-paragraph entries**, with the guide chasing
+citations for all of them. That is what a completeness metric does: I added one and it was
+optimised for. Output volume is what costs wall-clock time.
+
+Now enforced: at most **12 sections, 28 questions, 6 questions per section**, and
+`document_sections` lists articles or top-level sections — a 60+ entry index is refused as
+sub-paragraph noise. The uncited-sections report now says explicitly that it is not a target and
+that most documents have sections a guide should leave out.
+
+A guide nobody finishes is not more useful for being complete, and the executed document is still
+there for anything left out.
+
+Verified: 14 older negatives still refused, plus too-many-sections, a 169-entry index, and
+fabricated, missing, thin and unfindable quotes; quoted single-column, two-column and three-way
+split content all build; binder unaffected; no worksheet file is written.
+
+---
+
 ## v3.0 — 2026-09 — Verify while reading, not afterwards
 
 The v2.9 flow needed two passes over the document: write the facts, then re-read everything to

@@ -8,6 +8,14 @@ Run: `python3 assets/build.py content.json /mnt/user-data/outputs/Name_FAQ_Guide
 
 Unknown keys are rejected. On any failure the build prints the problem and writes nothing.
 
+## Keep the guide short
+
+At most **12 sections, 28 questions, 6 questions per section** — the build refuses more. Cover what
+an advisor asks on a call. A boilerplate provision needs no Q&A of its own; the document is still
+there for whatever the guide leaves out. `document_sections` lists the document's **articles or
+top-level sections**, not every sub-paragraph — a 169-entry index makes coverage meaningless and
+pushes the guide toward citing everything.
+
 ## Top level
 
 | Key | Required | Notes |
@@ -59,7 +67,7 @@ words, copied verbatim:
 The build looks up each quote in the source text (whitespace and smart quotes normalised) and
 **fails on any it cannot find**. That is the verification: you are already reading §1.4 when you
 write it, so record the words at that moment instead of re-reading the whole document afterwards.
-Claims whose quote is confirmed arrive on the worksheet already marked `[x]`.
+The build reports how many quotes were confirmed.
 
 Where quotes go:
 - Quick Reference rows with a `cite`
@@ -69,7 +77,7 @@ Where quotes go:
 
 Not needed on: `not_found` rows, items with `"cite": false`, and rows that characterise the
 document rather than quote a provision ("Document: joint revocable living trust for a married
-couple") — those carry no citation, and get marked by hand on the worksheet.
+couple") — those carry no citation. Mention anything you could not confirm in the post-output notes.
 
 **What a confirmed quote proves:** the document contains those words. **What it does not prove:**
 that they sit at the cited section, or that your summary of them is right. Do not paraphrase into

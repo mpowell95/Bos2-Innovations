@@ -73,6 +73,72 @@ CITE_SHAPE = re.compile(
       )$""",
     re.X)
 
+EXPECTED = {
+    "revocable": ["trustee succession", "incapacity", "administration upon death",
+                  "distribution", "administrative", "protective"],
+    "irrevocable": ["trustee succession", "distribution", "administrative", "protective"],
+    "will": ["executor", "residuary", "specific bequest", "administrative"],
+}
+
+
+def _strip(t):
+    return re.sub(r"<[^>]+>", "", str(t)).strip()
+
+
+def cross_checks(data):
+    """Checks that need no document, only the content file read against itself."""
+    warn = []
+    blob = json.dumps(data).lower()
+
+    # Interested-trustee conflict. If a person is named both as a trustee and as a
+    # beneficiary, "full discretion" over distributions to themselves is a
+    # self-dealing problem -- the skill's highest-liability rule.
+    names = set()
+    for r in data.get("quick_ref") or []:
+        k = str(r.get("k", "")).lower()
+        vals = r.get("numbered") or r.get("v")
+        if not isinstance(vals, list):
+            vals = [vals]
+        flat = [_strip(x.get("text", "") if isinstance(x, dict) else x) for x in vals]
+        if any(w in k for w in ("trustee", "grantor")):
+            names |= {("trustee", n) for n in flat if n}
+        if any(w in k for w in ("beneficiar", "remainder", "children")):
+            names |= {("beneficiary", n) for n in flat if n}
+    # Scope: this compares names that appear in Quick Reference rows only. A document
+    # that names no beneficiaries there -- e.g. one disposing to "my descendants"
+    # generally -- gives it nothing to compare, so silence here is not a clearance.
+    trustees = {n for role, n in names if role == "trustee"}
+    benes = {n for role, n in names if role == "beneficiary"}
+    both = {n for n in trustees & benes if len(n) > 3}
+    if both and re.search(r"(full|sole|absolute|complete)\s+discretion", blob):
+        warn.append(
+            "INTERESTED TRUSTEE: " + ", ".join(sorted(both)) + " appears as both a "
+            "trustee and a beneficiary, and the guide says \"full/sole/absolute "
+            "discretion\" somewhere. Check whether an independent trustee is required "
+            "for distributions to that person. If so, the flowchart and distribution "
+            "table must say an independent trustee decides -- a beneficiary-trustee "
+            "must never be described as self-directing distributions to themselves.")
+    elif both:
+        warn.append(
+            "INTERESTED TRUSTEE: " + ", ".join(sorted(both)) + " is both trustee and "
+            "beneficiary. No \"full discretion\" language found, which is correct, but "
+            "confirm the guide states who decides distributions to that person.")
+
+    # Sections the type normally has.
+    titles = " ".join(str(s.get("title", "")).lower() for s in data.get("sections") or [])
+    dt = str(data.get("doc_type_dates", "")).lower()
+    key = ("will" if "will" in dt and "trust" not in dt else
+           "revocable" if "revocable" in dt else
+           "irrevocable" if "irrevocable" in dt else None)
+    if key:
+        missing = [e for e in EXPECTED[key] if e not in titles]
+        if missing:
+            warn.append(f"SECTIONS: a {key} document usually has a section covering "
+                        f"{', '.join(missing)}. None found. Confirm the document really "
+                        f"lacks these rather than the guide having skipped them.")
+    return warn
+
+
 # Classes that exist purely as querySelectorAll hooks for the shell's JS and
 # deliberately carry no style rule. Everything NOT listed here must have a rule
 # in the template stylesheet, or the build fails -- that check is what catches a
@@ -167,9 +233,11 @@ def check_quote(quote, where, cite=None):
     if not quote or not str(quote).strip():
         return False
     q = normalise(str(quote))
-    if len(q) < 12:
-        err(f'{where}: quote "{quote}" is too short to confirm anything - give at '
-            f"least a dozen characters of the document's own words")
+    words = [w for w in re.findall(r"[a-z']+", q) if len(w) > 1]
+    if len(q) < 25 or len(words) < 4:
+        err(f'{where}: quote "{quote}" is too thin to confirm anything - give a real '
+            f"clause from the document (25+ characters, at least four words). A "
+            f"fragment like a number or a defined term proves nothing.")
         QUOTES.append((False, quote, where, cite))
         return False
     ok = q in SRC["text"]
@@ -329,6 +397,24 @@ def render_blocks(blocks, where, cls, indent="        "):
                     f"in the document's own words covering what this block states.")
             else:
                 check_quote(b["quote"], w, b.get("cite"))
+        # Rows and stages may each carry their own quote. Only a claim with its OWN
+        # quote is pre-marked on the worksheet: a single block quote cannot confirm
+        # four different rows, and pre-marking them from it produced worksheets that
+        # said "verified" beside facts nothing had confirmed.
+        if b.get("type") == "table":
+            for ri, row in enumerate(b.get("row_quotes") or []):
+                if row:
+                    check_quote(row, f"{w} row {ri} quote", b.get("cite"))
+        if b.get("type") == "flowchart":
+            for sti, st in enumerate(b.get("stages") or []):
+                for leg in (st.get("branch") or [st]):
+                    if leg.get("quote"):
+                        check_quote(leg["quote"], f"{w} stage \'{leg.get('stage','')}\'",
+                                    leg.get("cite"))
+        if b.get("type") == "two_col":
+            for side in ("g1", "g2"):
+                if (b.get(side) or {}).get("quote"):
+                    check_quote(b[side]["quote"], f"{w} {side} quote", b.get("cite"))
         if kind == "table":
             out.append(render_table(b, w, cls, indent))
         elif kind == "flowchart":
@@ -442,6 +528,32 @@ def render_quick_ref(rows, cls):
     flush()
     out += ["      </table>", "    </div>"]
     return "\n".join(out)
+
+
+MAX_SECTIONS = 12
+MAX_QUESTIONS = 28
+
+
+def check_size(sections):
+    """A guide nobody finishes reading is not more useful for being complete.
+
+    Earlier versions grew to 15 sections and 46 questions chasing full citation
+    coverage. That is twice what an advisor reads on a call, and output volume is
+    what makes a run slow. Cover what someone actually asks; leave the rest to the
+    document.
+    """
+    qs = sum(len(s.get("items") or []) for s in sections)
+    if len(sections) > MAX_SECTIONS:
+        err(f"{len(sections)} sections is too many (limit {MAX_SECTIONS}). Merge or drop "
+            f"the ones an advisor would not open. Completeness is not the goal.")
+    if qs > MAX_QUESTIONS:
+        err(f"{qs} questions is too many (limit {MAX_QUESTIONS}). Keep the ones someone "
+            f"actually asks on a call; a boilerplate provision needs no Q&A of its own.")
+    for s in sections:
+        n = len(s.get("items") or [])
+        if n > 6:
+            err(f'section "{s.get("title","")}" has {n} questions (limit 6). Split it or '
+                f"cut the ones that restate the document rather than answering a question.")
 
 
 def render_sections(sections, cls):
@@ -686,8 +798,16 @@ def main():
     SRC["text"] = normalise(source)
     SRC["raw_len"] = len(source)
 
+    idx0 = data.get("document_sections") or []
+    if len(idx0) > 60:
+        err(f"document_sections has {len(idx0)} entries. List the document's ARTICLES or "
+            f"top-level sections, not every sub-paragraph - a 169-entry index turns "
+            f"coverage into noise and pushes the guide toward citing everything instead "
+            f"of what matters.")
+
     die()  # stop before rendering if the shape is wrong
 
+    check_size(data["sections"])
     main_html = []
     for i, b in enumerate(data.get("banners") or []):
         main_html.append(render_banner(b, f"top banner {i}", cls))
@@ -742,16 +862,8 @@ def main():
     print(f"OK  wrote {out_path}  ({len(html):,} bytes)")
     print(f"    layout={layout}  sections={len(data['sections'])}  "
           f"logo={logo.count('<path')} paths / {logo.count('<use')} use")
-    idx = [c.strip() for c in data["document_sections"]]
-    used = {r for r, _ in CITES_SEEN}
-    unused = [c for c in idx if c not in used and c.lstrip("\u00a7").strip() not in
-              {u.lstrip("\u00a7").strip() for u in used}]
-    print(f"    citations: {len(CITES_SEEN)} references to {len(used)} of "
-          f"{len(idx)} sections in the document")
-    if unused:
-        print(f"    {len(unused)} section(s) in the document are never cited: "
-              f"{', '.join(unused[:12])}{' ...' if len(unused) > 12 else ''}")
-        print(f"    Check whether any of those belong in the guide.")
+    print(f"    citations: {len(CITES_SEEN)} references to "
+          f"{len({r for r, _ in CITES_SEEN})} distinct sections")
     ok = sum(1 for q in QUOTES if q[0])
     print(f"    quotes: {ok} of {len(QUOTES)} confirmed word-for-word against "
           f"{len(src_paths)} source file(s) ({SRC['raw_len']:,} chars)")
@@ -761,17 +873,35 @@ def main():
     nf = html.count("not-found")
     if nf:
         print(f"    {nf} provision(s) flagged NOT FOUND - list them in the post-output notes")
-    print()
-    if ws_path and ws_info:
-        print("    NOT DELIVERABLE YET - the content is unverified.")
-        print(f"    Wrote {ws_path.name}: {ws_info['claims']} claims to check against "
-              f"the document.")
-        for w in ws_info["warnings"]:
-            print(f"      ! {w.split(':')[0]} - see the top of the worksheet")
-        print("    Mark every line, then run:")
-        print(f"      verify.py check {ws_path}")
+    idx = [c.strip() for c in data["document_sections"]]
+    used = {r for r, _ in CITES_SEEN}
+    loose = {u.lstrip("\u00a7").strip() for u in used}
+    unused = [c for c in idx
+              if c not in used and c.lstrip("\u00a7").strip() not in loose]
+    if unused:
+        print()
+        print(f"    {len(idx) - len(unused)} of {len(idx)} document sections are cited; "
+              f"{len(unused)} are not:")
+        print("      " + ", ".join(unused[:14])
+              + (f" ... and {len(unused) - 14} more" if len(unused) > 14 else ""))
+        print("      This is not a target. Most documents have sections a guide should "
+              "leave out.")
+        print("      Only add one if an advisor would ask about it.")
+    warn = cross_checks(data)
+    if warn:
+        print()
+        print("    CHECK THESE BEFORE DELIVERING:")
+        for w in warn:
+            for i, line in enumerate(re.findall(r".{1,84}(?:\s|$)", w)):
+                print(("      " if i == 0 else "        ") + line.strip())
     else:
-        print(ws_note)
+        print()
+        print("    No cross-check fired. That is not a clearance: the interested-trustee "
+              "check compares")
+        print("    names in Quick Reference rows, so a document naming no beneficiaries "
+              "there gives it")
+        print("    nothing to compare. Confirm by reading whether any trustee is also a "
+              "beneficiary.")
 
 
 if __name__ == "__main__":

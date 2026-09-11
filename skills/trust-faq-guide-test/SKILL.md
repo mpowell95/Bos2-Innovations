@@ -112,7 +112,7 @@ section order for each type, the `data-cat` mapping, and the per-type content re
 the user stated a type up front and it conflicts with the signals, flag it and ask before
 proceeding.
 
-Branch: HTML guide -> Steps 4 and 5. PowerPoint -> Step 6. Family binder -> Step 7.
+Branch: HTML guide -> Step 4. PowerPoint -> Step 5. Family binder -> Step 6.
 
 ---
 
@@ -166,66 +166,25 @@ rather than delivering something unverified.
 
 ---
 
-## Step 5 — Verify the content against the document
-
-**Required for every HTML guide. Do not deliver before this passes.**
-
-Most of this already happened in Step 4: every citation carried a quote, and the build confirmed
-each quote word-for-word against the document text. The worksheet arrives with those claims
-**already marked `[x]`**, with the quote shown beside each.
-
-What is left to mark by hand is the rest — NOT FOUND flags, general explanations, characterisations
-of the document that quote nothing, and any banner you raised. Usually a handful.
-
-```
-V=$(find /mnt/skills -path '*trust-faq-guide*/assets/verify.py' | head -1)
-# ... re-read the document and mark every line in [GuideName]_verification.md ...
-python3 "$V" check /mnt/user-data/outputs/[GuideName]_verification.md
-```
-
-If many claims still need marking, `verify.py mark <worksheet> <marks.txt>` applies a batch and
-reports how many remain without failing; `check` runs once at the end. Format and staging:
-`references/large-guides.md`.
-
-The worksheet lists every decision-driving claim — names, amounts, ages, succession order,
-distribution standards, flowchart stages, table rows, NOT FOUND flags. For the ones still
-unmarked, mark each by **going back to the document**:
-
-- `[x]` confirmed — the document says this, at this citation
-- `[!]` wrong — note what the document actually says, then fix `content.json`, rerun `build.py`,
-  re-extract the worksheet, and check again
-- `[?]` not verifiable from the document — say why; these go in the post-output notes
-
-A claim you did not actually look up is not `[x]`. Marking everything `[x]` without re-reading
-makes the worksheet a lie and is worse than not running it — the advisor will trust it.
-
-The worksheet also opens with "Check these first" — cross-checks that need no document
-(interested-trustee conflicts, sections this document type normally has but the guide omits,
-document sections never cited). Each explains itself; work them before the claims.
-
-Deliver the worksheet alongside the guide. It is the record that the guide was checked.
-
----
-
-## Step 6 — PowerPoint (Client Meeting Summary)
+## Step 5 — PowerPoint (Client Meeting Summary)
 
 If the user asked for a PowerPoint, slide deck or Client Meeting Summary, read
 **`references/pptx-guide.md`** and follow it.
 
 ---
 
-## Step 7 — Family Estate Plan Binder
+## Step 6 — Family Estate Plan Binder
 
-If the user asked for a binder, produce each individual guide via Steps 4-5 first, then read
+If the user asked for a binder, produce each individual guide via Step 4 first, then read
 **`references/binder-guide.md`** and follow it. Same pattern as Step 4: you write a JSON file,
 `assets/build_binder.py` renders it. Set `binder` in each guide's content.json so its
 back-to-index crumb is generated.
 
 ---
 
-## Step 8 — Deliver
+## Step 7 — Deliver
 
-1. Present the file(s) with `present_files`, including the verification worksheet.
+1. Present the file(s) with `present_files`.
 2. **Offer Box upload:** "Would you like me to upload this to the client's Box folder? If so,
    share the Box folder ID." Given an ID, read the saved file and call `Box:upload_file` with
    `file_name`, `parent_folder_id`, and `file_content`. For a binder, upload the index and every
@@ -238,10 +197,9 @@ POST-OUTPUT NOTES
 Reference files read:
 - [section-guide.md, content-schema.md, ...]
 
-Verification (Step 5):
-- [n] claims checked against the document; [n] confirmed, [n] not verifiable
-- [list every [?] claim and why it could not be verified]
-- [list every cross-check warning and how it was resolved]
+Quotes confirmed: [n] of [n] against the document text
+- [anything you could not confirm, and why]
+- [every build warning and how it was resolved]
 
 Provisions flagged [NOT FOUND]:
 - [each, with section reference]
@@ -267,7 +225,7 @@ Cross-document connections identified:
 ## Checklist before delivering
 
 `build.py` already enforces the shell, logo, classes, open/closed defaults, CSP rules and
-citations, and `verify.py check` gates the claim-by-claim verification. Both must have exited OK.
+citations, and confirms every quote word-for-word against the document text. It must have exited OK.
 What neither can check, and you must:
 
 - [ ] Full text of every document read — not previews
@@ -276,7 +234,7 @@ What neither can check, and you must:
 - [ ] **Independent trustee** — no "full discretion" where a beneficiary is trustee
 - [ ] **Cross-document** — pour-over / codicil supersession / agent roles noted
 - [ ] **Guardian (Wills)** — minor children addressed or flagged NOT FOUND
-- [ ] the verification worksheet delivered with the guide, every `[?]` listed in the notes
+- [ ] anything you could not confirm in the document listed in the post-output notes
 - [ ] Post-output notes posted with all six sections
 
 ---
