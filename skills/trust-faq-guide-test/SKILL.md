@@ -1,5 +1,5 @@
 ---
-name: trust-faq-guide
+name: trust-faq-guide-test
 description: >
   Creates estate planning document guides in two formats: (1) an interactive HTML FAQ with
   citations and collapsible sections, or (2) a simplified client-facing PowerPoint deck (~10
@@ -15,9 +15,16 @@ description: >
 ---
 
 <!--
-v2.9 — production. Claude writes only the facts (a content JSON); assets/build.py renders
-them into a locked template and refuses to write if anything is wrong, and assets/verify.py
-gates delivery on a claim-by-claim check against the source document.
+v3.0 TEST COPY — named trust-faq-guide-test so it sits alongside the live trust-faq-guide
+rather than replacing it. If the wrong one fires, ask for "the trust-faq-guide-test skill"
+by name.
+
+Claude writes only the facts (a content JSON), each citation carrying a verbatim quote;
+assets/build.py renders them into a locked template, confirms every quote against the
+document text, and refuses to write if anything is wrong.
+
+TO PROMOTE: change the frontmatter `name:` and the folder name to trust-faq-guide. Nothing
+else — the builders resolve their own paths.
 
 Version history is in CHANGELOG.md, shipped alongside this file. Do not read it at run time —
 it is 38KB and purely historical. It is there for whoever maintains this skill next.
