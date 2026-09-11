@@ -1,13 +1,15 @@
 # assets/
 
-- `guide-template.html` — the complete HTML shell for a guide, with `{{...}}` placeholders.
-  Logo embedded inline. Read only by `build.py`, never by a model.
-- `build.py` — renders guide content JSON into that template, validates, writes nothing on failure.
-- `binder-template.html` — the shell for the Family Estate Plan Binder index (static, no script).
-- `build_binder.py` — renders binder JSON. Reuses build.py's validators, so both outputs are
-  held to one standard.
-- `content-schema.md` — the guide content format. Read this before authoring guide content.
-  The binder format is in `references/binder-guide.md`.
+Templates and builders. A model never reads a template — only its builder does.
 
-Do not hand-edit a template to change content — content comes from the JSON. To change a shell,
-edit the template, then run both builders against test content to confirm they still validate.
+- `guide-template.html` — complete HTML shell for a guide, `{{...}}` placeholders, logo inline.
+- `build.py` — renders guide content JSON. Enforces shell fidelity, logo census, class coverage,
+  open/closed defaults, CSP rules and citations. Writes nothing on failure.
+- `verify.py` — the content pass. `extract` builds a worksheet of every decision-driving claim
+  for checking against the document; `check` gates delivery until each is marked. Also runs the
+  interested-trustee, missing-section and uncited-section cross-checks.
+- `binder-template.html` / `build_binder.py` — the Family Estate Plan Binder index (static).
+- `content-schema.md` — the guide content format. Binder format: `references/binder-guide.md`.
+
+To change a shell: edit the template, then run both builders against test content to confirm
+they still validate. Never hand-edit a template to change content.

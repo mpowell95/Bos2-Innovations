@@ -88,33 +88,8 @@ the user the file can't be processed if OCR itself fails.
 
 Read the **full text**. Never rely on previews or first/last pages.
 
-Reading order:
-- **Trusts:** opening articles (parties, name, governing law) -> distributions (specific gifts,
-  charitable residue, withdrawal schedules) -> trustee succession and powers -> administrative
-  and protective provisions.
-- **Wills:** opening clause (testator, date, governing law, family recitals) -> specific bequests
-  and tangible personal property -> residuary estate and pour-over clause -> executor succession
-  and powers -> guardian nominations -> administrative provisions.
-- **POA / HCP / HIPAA / Codicil:** principal, agents and successors (acceptance dates/contacts if
-  present), springing vs. immediate, activation standard, scope of powers, gifting limits (POA),
-  end-of-life directives (HCP), authorized recipients (HIPAA), and exactly which prior provisions
-  a codicil replaces.
-
-Capture every party name, dollar amount, section/article heading, withdrawal schedule, named
-charity, and parcel of real property. **Keep the full list of section/article headings** — it
-goes into the content file as `document_sections`, and every citation in the guide is checked
-against it, so an invented citation cannot ship. Correct OCR artifacts (mid-word capitals like "tRustee",
-hyphens splitting names, run-together words, punctuation replacing letters) and note every
-correction so it can be verified.
-
-**Base trust + amendments:** the most recent restatement controls for provisions it addresses.
-Record the amendment history in the Quick Reference. Flag any provision where an amendment
-conflicts with the original — never silently merge them.
-
-**Will + Trust, or a codicil:** identify any pour-over clause and note it prominently, cross-
-referencing the trust. Treat the documents as one integrated plan. For a codicil, state exactly
-which Will articles it replaces, and treat it as controlling for those. Never invent a connection
-the documents don't state.
+Read **`references/reading-guide.md`** now — the reading order for each document type, and how
+to handle a base trust with amendments, a Will alongside a trust, and a codicil.
 
 ---
 
@@ -132,7 +107,7 @@ section order for each type, the `data-cat` mapping, and the per-type content re
 the user stated a type up front and it conflicts with the signals, flag it and ask before
 proceeding.
 
-Branch: HTML guide -> Step 4. PowerPoint -> Step 5. Family binder -> Step 6.
+Branch: HTML guide -> Steps 4 and 5. PowerPoint -> Step 6. Family binder -> Step 7.
 
 ---
 
@@ -198,35 +173,59 @@ rather than delivering something unverified.
 
 ---
 
-## Step 5 — PowerPoint (Client Meeting Summary)
+## Step 5 — Verify the content against the document
 
-Read in order: the `pptx` skill (`/mnt/skills/public/pptx/SKILL.md`), the
-`cerity-partners-powerpoint-branding` skill, then `references/simplified-sections.md` for the
-slide-by-slide requirements.
+**Required for every HTML guide. Do not deliver before this passes.**
 
-Extract all party names, dates, distribution standards, trustee succession and key protections
-from the document — no canned text. Discussion Points must be specific to this document
-(incomplete succession chains, unconfirmed elections, annual administrative requirements, any
-warning flags found in review) — no generic filler. Plain language, no §citations on slides. Use
-warning callouts for interested-trustee restrictions, missing successors, unconfirmed elections,
-and client action items. For two mirror trusts, follow the two-column variant in that file.
+`build.py` guarantees the guide is well formed. It cannot tell whether a name, amount, age or
+citation is *right*. That is this step.
 
-Save to `/mnt/user-data/outputs/[Name]_Trust_Summary.pptx`.
+```
+V=$(find /mnt/skills -path '*trust-faq-guide*/assets/verify.py' | head -1)
+python3 "$V" extract content.json verification.md      # builds the worksheet
+# ... re-read the document and mark every line ...
+python3 "$V" check verification.md                     # gate
+```
+
+The worksheet lists every decision-driving claim — names, amounts, ages, succession order,
+distribution standards, flowchart stages, table rows, NOT FOUND flags — with its citation. Mark
+each by **going back to the document**:
+
+- `[x]` confirmed — the document says this, at this citation
+- `[!]` wrong — note what the document actually says, then fix `content.json`, rerun `build.py`,
+  re-extract the worksheet, and check again
+- `[?]` not verifiable from the document — say why; these go in the post-output notes
+
+A claim you did not actually look up is not `[x]`. Marking everything `[x]` without re-reading
+makes the worksheet a lie and is worse than not running it — the advisor will trust it.
+
+The worksheet also opens with "Check these first" — cross-checks that need no document
+(interested-trustee conflicts, sections this document type normally has but the guide omits,
+document sections never cited). Each explains itself; work them before the claims.
+
+Deliver `verification.md` alongside the guide. It is the record that the guide was checked.
 
 ---
 
-## Step 6 — Family Estate Plan Binder
+## Step 6 — PowerPoint (Client Meeting Summary)
 
-If the user asked for a binder, produce each individual guide via Step 4 first, then read
+If the user asked for a PowerPoint, slide deck or Client Meeting Summary, read
+**`references/pptx-guide.md`** and follow it.
+
+---
+
+## Step 7 — Family Estate Plan Binder
+
+If the user asked for a binder, produce each individual guide via Steps 4-5 first, then read
 **`references/binder-guide.md`** and follow it. Same pattern as Step 4: you write a JSON file,
 `assets/build_binder.py` renders it. Set `binder` in each guide's content.json so its
 back-to-index crumb is generated.
 
 ---
 
-## Step 7 — Deliver
+## Step 8 — Deliver
 
-1. Present the file(s) with `present_files`.
+1. Present the file(s) with `present_files`, including `verification.md`.
 2. **Offer Box upload:** "Would you like me to upload this to the client's Box folder? If so,
    share the Box folder ID." Given an ID, read the saved file and call `Box:upload_file` with
    `file_name`, `parent_folder_id`, and `file_content`. For a binder, upload the index and every
@@ -238,6 +237,11 @@ POST-OUTPUT NOTES
 
 Reference files read:
 - [section-guide.md, content-schema.md, ...]
+
+Verification (Step 5):
+- [n] claims checked against the document; [n] confirmed, [n] not verifiable
+- [list every [?] claim and why it could not be verified]
+- [list every cross-check warning and how it was resolved]
 
 Provisions flagged [NOT FOUND]:
 - [each, with section reference]
@@ -262,17 +266,18 @@ Cross-document connections identified:
 
 ## Checklist before delivering
 
+`build.py` already enforces the shell, logo, classes, open/closed defaults, CSP rules and
+citations, and `verify.py check` gates the claim-by-claim verification. Both must have exited OK.
+What neither can check, and you must:
+
 - [ ] Full text of every document read — not previews
-- [ ] All parties, amounts, percentages and dates verified against the source
-- [ ] Succession ladders complete and in order
 - [ ] Nothing fabricated; every statement traceable to the document
-- [ ] **Independent trustee check** — no "full discretion" where a beneficiary is trustee
-- [ ] **Cross-document check** — pour-over / codicil supersession / agent roles noted
-- [ ] **Guardian check (Wills)** — minor children addressed or flagged NOT FOUND
-- [ ] `section-guide.md` read; section order follows it; no numbering gaps
-- [ ] `preparer` set to the running user's name
-- [ ] build.py exited OK (it enforces the shell, logo, classes, defaults and CSP rules)
-- [ ] Post-output notes posted with all five sections
+- [ ] Succession ladders complete and in the document's order
+- [ ] **Independent trustee** — no "full discretion" where a beneficiary is trustee
+- [ ] **Cross-document** — pour-over / codicil supersession / agent roles noted
+- [ ] **Guardian (Wills)** — minor children addressed or flagged NOT FOUND
+- [ ] `verification.md` delivered with the guide, and every `[?]` listed in the notes
+- [ ] Post-output notes posted with all six sections
 
 ---
 

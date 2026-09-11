@@ -8,6 +8,48 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.3 — 2026-09 — Verification pass: the content gets checked, not just the formatting
+
+Everything before this made the guide reliably well-formed. None of it touched the risk that
+actually matters: a guide can be 100% valid and 100% wrong, because no script can tell whether
+"ages 25 / 30 / 35" is what the trust says.
+
+`assets/verify.py` does two things about that.
+
+**`extract`** pulls every decision-driving claim out of the content file into a worksheet —
+Quick Reference rows, table rows, flowchart stages, two-column blocks, banners, NOT FOUND flags,
+and any answer containing a number, date, age, role or discretion term. Generic explanation is
+skipped; this is about claims that drive decisions. Each line carries its citation.
+
+**`check`** refuses to pass until every line is marked: `[x]` confirmed against the document,
+`[!]` wrong (fix content.json, rebuild, re-extract), `[?]` not verifiable (reported to the
+advisor, never silently dropped). It also blocks an invalid mark, a `[!]` still present, and an
+incomplete sign-off. The worksheet is delivered with the guide as the record that it was checked.
+
+It cannot force an honest read — marking everything `[x]` without looking would pass. SKILL.md
+says so bluntly: a claim you did not look up is not `[x]`, and a false worksheet is worse than
+none because the advisor will trust it. That is a limit of the approach, not an oversight.
+
+**Cross-checks needing no document**, printed at the top of the worksheet:
+
+- **Interested trustee** — if a person appears as both trustee and beneficiary and the guide says
+  "full/sole/absolute discretion" anywhere, the worksheet demands it be resolved. This is the
+  skill's highest-liability rule (added v1.1 from counsel feedback) and had been prose-only for
+  every version since.
+- **Missing sections** — sections a document type normally carries that the guide omits. A
+  warning, not a failure: a real document can lack any of them, but the omission is now visible.
+- **Uncited sections** — headings in `document_sections` the guide never cites.
+
+SKILL.md restructured to fit under the read limit with real headroom (14,426 chars, ~1,600 spare):
+the PowerPoint step moved to `references/pptx-guide.md`, the per-type reading order to
+`references/reading-guide.md`, the document-type signal table to `section-guide.md`, and the
+delivery checklist cut to only what the builders cannot enforce.
+
+Verified: 6 gate behaviours; extract works across all five content shapes; the interested-trustee
+check fires correctly; build.py's 14 negative tests and build_binder.py's 8 all still refuse.
+
+---
+
 ## v2.2 — 2026-09 — Citations enforced, not just requested
 
 "Every material fact carries a citation" had been written in SKILL.md since v1.x and was never
