@@ -18,6 +18,7 @@ Unknown keys are rejected. On any failure the build prints the problem and write
 | `prepared` | yes | e.g. `"September 2026"` |
 | `quick_ref` | yes | Rows of the §1 key-facts table. See below. |
 | `sections` | yes | Collapsible sections, in order. Numbering starts at §2 automatically. |
+| `document_sections` | yes | **Every** section/article heading you found in the document, as a flat list. See below — every citation in the guide is checked against it. |
 | `layout` | no | `"single"` (default) or `"two-column"` (mirror/paired RLTs only). |
 | `grantor_labels` | two-column only | `["Robert", "Margaret"]` — grantor 1 is named first in the preamble. |
 | `eyebrow` | no | Teal header label. Defaults to `"Trust & Estate FAQ"`. |
@@ -36,6 +37,33 @@ and nothing else:
 Any other class fails the build — it would render unstyled. Never use `<img>`, `data:` URIs,
 `mask:`, external stylesheets or emoji; all are rejected (the first three are silently blocked
 by the hosting platform's CSP, so they fail invisibly in the browser rather than loudly).
+
+## `document_sections` — the citation index
+
+While reading the document (Step 2) you already capture every section and article heading.
+Write that list here:
+
+```json
+"document_sections": ["§1.1", "§1.2", "§1.3", "§1.4", "§2.3", "§3.1", "§3.2",
+                      "§4.1", "§4.2", "Schedule A"]
+```
+
+Every citation anywhere in the guide — Quick Reference rows, answers, table cells, flowchart
+stages — must match an entry here, or the build fails. This makes an invented citation
+impossible to ship: a `§9.4` in a trust with eight articles is caught before the file is
+written.
+
+Be complete and be honest. List what the document actually contains, including sections the
+guide never cites — the build reports those back so you and the advisor can see whether
+anything relevant was skipped. Do not pad the list to make a citation pass; that defeats the
+only mechanical check on citations that exists.
+
+**What this does not do:** confirm a citation points at the *right* section. `§4.2` can exist
+and still be the wrong reference for the sentence it sits on. Only reading the document
+establishes that, and the build says so on every run.
+
+Citations must be shaped like references: `§4.2`, `§4.2(a)`, `Art. Three`, `Article IV`,
+`Part 6`, `POA Art. One`, `Schedule A`. Prose like "somewhere in the trust" fails.
 
 ## Content rules
 
@@ -62,7 +90,7 @@ by the hosting platform's CSP, so they fail invisibly in the browser rather than
 |---|---|
 | `k` | Label |
 | `v` | Value. A **list** renders as stacked one-per-line (`qr-people`) — always use a list for two or more people; never join names with `,` or `·`. |
-| `cite` | Section reference, rendered as a quiet chip |
+| `cite` | Section reference, rendered as a quiet chip. Most substantive rows need one; set `false` on a row that characterises the document rather than quoting a provision. |
 | `hl` | `true` highlights the value. Max 3 per guide, or the build fails — past that, highlighting means nothing. Use it for the 1–2 must-catch facts (current amendment date, payout ages). |
 | `not_found` | `true` renders the standard NOT FOUND flag instead of a value |
 | `numbered` | A ladder (successor trustees). Renders as a full-width numbered chip list. Items are strings, or `{"text": "...", "badge": "Only difference"}` to mark the one differing tier in a mirror pair. |
@@ -91,6 +119,12 @@ the section colour and the filter buttons; the mapping is in `references/section
 
 `blocks` render before the questions. An item may also carry its own `blocks`, rendered after
 its answer. Every block ends up inside its section, so nothing escapes the category filter.
+
+**Every answer must carry a citation** — a `<span class="section-ref">§X.XX</span>` for the
+provision it states, or a `not-found` flag. An answer that is a general explanation rather than
+a provision of this document (e.g. "What is a revocable trust?") sets `"cite": false` on the
+item, making the exception deliberate rather than accidental. Otherwise the build fails and
+names the question.
 
 **Open/closed state is not yours to set.** §2 opens with its first question open; §3–4 open with
 questions closed; §5 onward fully closed. This is the single biggest lever on page height.

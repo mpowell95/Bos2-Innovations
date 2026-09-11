@@ -8,6 +8,44 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.2 — 2026-09 — Citations enforced, not just requested
+
+"Every material fact carries a citation" had been written in SKILL.md since v1.x and was never
+checked. Demonstrated by replacing every answer in a test file with "The trust says whatever I
+feel like. No citation at all" and stripping every Quick Reference citation: the build printed
+OK and wrote the file. The rule had exactly the status "copy the style block verbatim" had for
+eight versions — true, important, in two places, and silently violable.
+
+Three checks added:
+
+- **Presence.** An answer with no `section-ref` and no `not-found` flag fails the build, named
+  by section and question. An answer that is a general explanation rather than a provision sets
+  `"cite": false`, making the exception deliberate and visible. Quick Reference is a proportion
+  check (most substantive rows must cite) since some rows characterise rather than quote.
+- **Shape.** A citation must look like a reference — `§4.2`, `§4.2(a)(iii)`, `Art. Three`,
+  `Article IV`, `Part 6`, `POA Art. One`, `Schedule A`. Prose like "somewhere in the trust"
+  fails.
+- **Existence.** New required key `document_sections`: the flat list of every section/article
+  heading found in the document, which Step 2 already required capturing. Every citation
+  anywhere in the guide — answers, Quick Reference, table cells, flowchart stages — must match
+  an entry. A `§9.4` in a trust with eight articles cannot ship.
+
+The build also now reports coverage — how many of the document's sections the guide cites, and
+names the ones it never cites — which is a completeness signal the skill never had.
+
+**Stated limit.** None of this checks whether a citation is *correct*. `§4.2` can exist and
+still be the wrong reference for the sentence it sits on; only reading the document establishes
+that. The build says so on every run, and Step 7 now requires telling the advisor the guide is
+unverified until they have read it against the document. Padding `document_sections` to make a
+citation pass defeats the only mechanical check on citations there is, and SKILL.md says so.
+
+Also moved: the document-type signal table from SKILL.md into section-guide.md, which Step 3
+reads at the same moment, keeping SKILL.md under the read limit with real headroom.
+
+Verified: 14 negative tests each refuse; full regression across all five modes.
+
+---
+
 ## v2.1 — 2026-09 — Binder templated; nothing reads the archive at run time
 
 The Family Estate Plan Binder was the last path where a model still copied a shell — Step 6

@@ -35,6 +35,20 @@ LOGO_TAIL_SENTINEL = 'matrix(100,0,0,-100,1932.16,319.901)'
 
 CATS = ("overview", "trustee", "lifecycle", "distribution", "legal")
 
+# A citation must look like one of these. Deliberately permissive about the label
+# itself -- documents number themselves in many ways -- but it must be a reference,
+# not prose.
+CITE_SHAPE = re.compile(
+    r"""^(?:
+        \u00a7\s?[\w.()\u2013\-]+                     # sec.4.2, sec.4, sec.4.2(a)(iii)
+      | Art(?:icle)?\.?\s+[\w.()\u2013\-]+            # Art. Three, Article IV
+      | Part\s+[\w.()\u2013\-]+                        # Part 6
+      | (?:POA|HCP|HIPAA|Will|Codicil|Trust)\s+       # POA Art. One
+        (?:Art(?:icle)?\.?|Part|\u00a7)\s*[\w.()\u2013\-]+
+      | (?:Schedule|Exhibit)\s+[\w.()\u2013\-]+        # Schedule A
+      )$""",
+    re.X)
+
 # Classes that exist purely as querySelectorAll hooks for the shell's JS and
 # deliberately carry no style rule. Everything NOT listed here must have a rule
 # in the template stylesheet, or the build fails -- that check is what catches a
@@ -88,7 +102,9 @@ def defined_classes(template):
 
 def check_inline(html, where, allowed_classes):
     """Validate authored inline markup: tags on the allowlist, classes defined
-    in the template's own stylesheet, nothing the CSP will silently eat."""
+    in the template's own stylesheet, nothing the CSP will silently eat. Also
+    harvests any citations it contains for the document_sections check."""
+    scan_cites(html, where)
     if not isinstance(html, str):
         err(f"{where}: expected text, got {type(html).__name__}")
         return
@@ -114,8 +130,52 @@ def check_inline(html, where, allowed_classes):
             err(f"{where}: {o} <{tag}> open vs {c} close - unbalanced")
 
 
-def cite(ref):
+# Every citation the build emits or finds in authored text, for the index check.
+CITES_SEEN = []
+
+
+def note_cite(ref, where):
+    if ref:
+        CITES_SEEN.append((str(ref).strip(), where))
+
+
+def cite(ref, where="content"):
+    note_cite(ref, where)
     return f' <span class="section-ref">{esc(ref)}</span>' if ref else ""
+
+
+def scan_cites(html, where):
+    """Pull citations out of authored inline markup so they are checked too."""
+    for ref in re.findall(r'<span class="section-ref">([^<]*)</span>', html or ""):
+        note_cite(ref, where)
+
+
+def check_citation_index(index, where_all):
+    """Two checks, and it is worth being precise about what each does.
+
+    1. SHAPE -- a citation must look like a reference, not a sentence.
+    2. EXISTENCE -- every citation must appear in document_sections, the list of
+       headings actually found in the document. This kills the invented-citation
+       failure: a sec.9.4 in a trust with eight articles cannot ship.
+
+    What this does NOT do, and no script can: confirm a citation points at the
+    RIGHT section. sec.4.2 may exist and still be the wrong reference for the
+    sentence it sits on. Only reading the document establishes that.
+    """
+    norm = {c.strip(): c.strip() for c in index}
+    # tolerate a bare "4.2" in the index for a sec.4.2 citation, and vice versa
+    loose = {c.strip().lstrip("\u00a7").strip() for c in index}
+    for ref, where in CITES_SEEN:
+        if not CITE_SHAPE.match(ref):
+            err(f'{where}: citation "{ref}" is not shaped like a section reference')
+            continue
+        if ref in norm:
+            continue
+        if ref.lstrip("\u00a7").strip() in loose:
+            continue
+        err(f'{where}: citation "{ref}" is not in document_sections - either the '
+            f"section was never found in the document, or the index is incomplete. "
+            f"Never cite a section you did not read.")
 
 
 # ------------------------------------------------------------------- components
@@ -288,6 +348,16 @@ def render_quick_ref(rows, cls):
         out.append("        <tr>" + cells + "</tr>")
         pending.clear()
 
+    # Quick Reference rows are mostly provisions, so most should carry a citation.
+    # Some legitimately do not (a one-phrase characterisation of the document, a
+    # NOT FOUND row), so this is a proportion check rather than a per-row rule.
+    substantive = [r for r in rows if not r.get("not_found") and r.get("cite") is not False]
+    cited = [r for r in substantive if r.get("cite")]
+    if substantive and len(cited) < len(substantive) * 0.6:
+        err(f"quick_ref: only {len(cited)} of {len(substantive)} substantive rows carry "
+            f'a citation. Cite the provision each fact comes from, or set "cite": false '
+            f"on a row that is a characterisation rather than a provision.")
+
     hl_count = sum(1 for r in rows if r.get("hl"))
     if hl_count > 3:
         err(f"quick_ref: {hl_count} rows are highlighted; at most 3 - past that the "
@@ -351,6 +421,17 @@ def render_sections(sections, cls):
             if q_open:
                 first_q_opened = True
             check_inline(a, f"section {num} item {i} answer", cls)
+            # An answer states what the document says, so it must say where.
+            # "cite": false marks a deliberate exception -- a general explanation
+            # that is not a provision of this document.
+            if it.get("cite") is not False:
+                if "section-ref" not in a and "not-found" not in a:
+                    err(f'section {num} ("{title}") item {i}: the answer carries no '
+                        f"citation and no NOT FOUND flag. Add a "
+                        f'<span class="section-ref">...</span> for the provision it '
+                        f'states, or set "cite": false if it is a general '
+                        f"explanation rather than a provision of this document. "
+                        f"Question: {q[:60]}")
             out.append('        <div class="faq-item">')
             out.append(f'          <button type="button" class="faq-q" '
                        f'aria-expanded="{str(q_open).lower()}" onclick="toggleQ(this)">')
@@ -462,11 +543,13 @@ def main():
         sys.exit(1)
 
     known = {"title", "eyebrow", "doc_type_dates", "layout", "grantor_labels",
-             "binder", "preparer", "prepared", "quick_ref", "banners", "sections"}
+             "binder", "preparer", "prepared", "quick_ref", "banners", "sections",
+             "document_sections"}
     for k in data:
         if k not in known:
             err(f'unknown top-level key "{k}" - allowed: {sorted(known)}')
-    for req in ("title", "doc_type_dates", "preparer", "prepared", "quick_ref", "sections"):
+    for req in ("title", "doc_type_dates", "preparer", "prepared", "quick_ref",
+                "sections", "document_sections"):
         if not data.get(req):
             err(f'required key "{req}" is missing or empty')
     layout = data.get("layout", "single")
@@ -509,6 +592,7 @@ def main():
     }.items():
         html = html.replace("{{" + key + "}}", val)
 
+    check_citation_index(data["document_sections"], "citations")
     verify_output(html, cls)
     die()
 
@@ -517,8 +601,21 @@ def main():
     logo = re.search(r'<svg[^>]*2054\.13.*?</svg>', html, re.S).group(0)
     print(f"OK  wrote {out_path}  ({len(html):,} bytes)")
     print(f"    layout={layout}  sections={len(data['sections'])}  "
-          f"logo={logo.count('<path')} paths / {logo.count('<use')} use  "
-          f"citations={html.count('section-ref')}")
+          f"logo={logo.count('<path')} paths / {logo.count('<use')} use")
+    idx = [c.strip() for c in data["document_sections"]]
+    used = {r for r, _ in CITES_SEEN}
+    unused = [c for c in idx if c not in used and c.lstrip("\u00a7").strip() not in
+              {u.lstrip("\u00a7").strip() for u in used}]
+    print(f"    citations: {len(CITES_SEEN)} references to {len(used)} of "
+          f"{len(idx)} sections in the document")
+    if unused:
+        print(f"    {len(unused)} section(s) in the document are never cited: "
+              f"{', '.join(unused[:12])}{' ...' if len(unused) > 12 else ''}")
+        print(f"    Check whether any of those belong in the guide.")
+    print("    Citations were checked for shape and for existence in "
+          "document_sections.")
+    print("    They were NOT checked for correctness - only reading the document "
+          "confirms a\n    citation points at the right provision.")
     nf = html.count("not-found")
     if nf:
         print(f"    {nf} provision(s) flagged NOT FOUND - list them in the post-output notes")

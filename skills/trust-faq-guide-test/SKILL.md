@@ -101,7 +101,9 @@ Reading order:
   a codicil replaces.
 
 Capture every party name, dollar amount, section/article heading, withdrawal schedule, named
-charity, and parcel of real property. Correct OCR artifacts (mid-word capitals like "tRustee",
+charity, and parcel of real property. **Keep the full list of section/article headings** — it
+goes into the content file as `document_sections`, and every citation in the guide is checked
+against it, so an invented citation cannot ship. Correct OCR artifacts (mid-word capitals like "tRustee",
 hyphens splitting names, run-together words, punctuation replacing letters) and note every
 correction so it can be verified.
 
@@ -123,28 +125,12 @@ their own RLT). "Grantor 1" is whoever is named first in the preamble. Everythin
 single-column — including a single trust of any type, a standalone Will, a Will + Trust package,
 a personal-documents bundle, and two irrevocable trusts.
 
-| Type | Key signals |
-|---|---|
-| Revocable Living Trust | "revocable," grantor = trustee, amendment/revocation reserved |
-| SLAT | "spousal lifetime access," irrevocable, spouse is beneficiary, gift at creation |
-| ILIT | "life insurance," irrevocable, Crummey notices, policy owned by trust |
-| GRAT | "grantor retained annuity," fixed annuity to grantor, defined term |
-| CRT / CRUT / CRAT | "charitable remainder," annuity or unitrust percentage |
-| SNT | "special needs"/"supplemental needs," benefit preservation language |
-| Other irrevocable | No revocation power, no grantor trust status, separate EIN |
-| Last Will and Testament | testator, executor, probate, "give, devise, and bequeath" |
-| Pour-Over Will | Will + clause directing residue to a named trust |
-| Codicil | "codicil," amends specific Will articles, republishes the Will |
-| Durable POA | principal, attorney-in-fact, "durable"/"springing" |
-| Health Care Proxy | medical decisions, end-of-life directives |
-| HIPAA Authorization | authorized recipients of PHI, capacity determination |
 
-If the user stated a document type up front, confirm it against these signals; if it conflicts,
-flag it and ask before proceeding.
-
-Then read **`references/section-guide.md`** for the section order and per-type content
-requirements. This is required, not optional — it holds the section orders for trusts by type,
-Wills, combined Will+Trust, and personal-document bundles, plus the `data-cat` mapping.
+Read **`references/section-guide.md`** now — required, not optional. It holds the document-type
+signal table (confirm the type from the document itself, not from what the user called it), the
+section order for each type, the `data-cat` mapping, and the per-type content requirements. If
+the user stated a type up front and it conflicts with the signals, flag it and ask before
+proceeding.
 
 Branch: HTML guide -> Step 4. PowerPoint -> Step 5. Family binder -> Step 6.
 
@@ -184,7 +170,12 @@ Reading it can only tempt you into reproducing something. Same for `build.py` an
 
 - **Every material fact carries a citation** — `"cite": "§4.2"` on a Quick Reference row, or
   `<span class="section-ref">§4.2</span>` inline in an answer. Wills use `Art. Three`; personal
-  documents use `POA Art. One`.
+  documents use `POA Art. One`. This is enforced: an answer with no citation and no NOT FOUND
+  flag fails the build, as does a citation that is not in `document_sections`. An answer that is
+  a general explanation rather than a provision sets `"cite": false`.
+- **Never cite a section you did not read.** The build confirms a citation *exists* in the
+  document; it cannot confirm it is the *right* one. Padding `document_sections` to make a
+  citation pass defeats the only mechanical check on citations there is.
 - **Never fabricate.** A provision you can't find gets `"not_found": true` (Quick Reference) or
   `<span class="not-found">[NOT FOUND — verify in original document]</span>` inline, and goes in
   the post-output notes.
@@ -261,8 +252,11 @@ Cross-document connections identified:
 - [Will clause -> Trust article; POA -> trustee succession; etc.]
 ```
 
-4. Close with: "Let me know if you'd like me to make any changes, or if you'd like this content in
-   another file format (PowerPoint, PDF, etc.)."
+4. **Say plainly that the guide is unverified.** The build checks formatting, structure and
+   whether each citation exists in the document — not whether any fact or citation is correct.
+   Close along these lines: "Please read this against the document before it goes to a client —
+   I've cited every provision, but only you can confirm each citation points at the right place.
+   Let me know if you'd like changes, or this content in another format (PowerPoint, PDF, etc.)."
 
 ---
 

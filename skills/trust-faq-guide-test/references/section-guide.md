@@ -6,7 +6,32 @@ Quick Reference is always §1 (a non-collapsible `.quick-ref`); collapsible sect
 
 ---
 
-## A. Section orders
+## A. Document type signals
+
+Confirm the type from the document itself; do not rely on what the user called it.
+
+| Type | Key signals |
+|---|---|
+| Revocable Living Trust | "revocable," grantor = trustee, amendment/revocation reserved |
+| SLAT | "spousal lifetime access," irrevocable, spouse is beneficiary, gift at creation |
+| ILIT | "life insurance," irrevocable, Crummey notices, policy owned by trust |
+| GRAT | "grantor retained annuity," fixed annuity to grantor, defined term |
+| CRT / CRUT / CRAT | "charitable remainder," annuity or unitrust percentage |
+| SNT | "special needs"/"supplemental needs," benefit preservation language |
+| Other irrevocable | No revocation power, no grantor trust status, separate EIN |
+| Last Will and Testament | testator, executor, probate, "give, devise, and bequeath" |
+| Pour-Over Will | Will + clause directing residue to a named trust |
+| Codicil | "codicil," amends specific Will articles, republishes the Will |
+| Durable POA | principal, attorney-in-fact, "durable"/"springing" |
+| Health Care Proxy | medical decisions, end-of-life directives |
+| HIPAA Authorization | authorized recipients of PHI, capacity determination |
+
+Two-column layout is used **only** for two mirror/paired revocable living trusts. Everything
+else is single-column, including two irrevocable trusts.
+
+---
+
+## B. Section orders
 
 ### Trust-only guide (single or two-column)
 1. Quick Reference — At a Glance
@@ -58,7 +83,7 @@ Follow the trust section order for all trust sections, then append: Will Overvie
 
 ---
 
-## B. `data-cat` by section
+## C. `data-cat` by section
 
 | Section | data-cat |
 |---|---|
@@ -70,7 +95,7 @@ Follow the trust section order for all trust sections, then append: Will Overvie
 
 ---
 
-## C. Trust-type-specific requirements
+## D. Trust-type-specific requirements
 
 ### Revocable Living Trust (RLT)
 Include Family Information, Incapacity, and (if present) Marital/Family Trust sections.
@@ -101,7 +126,7 @@ Universal sections only — omit Family Information, Incapacity, and Marital/Fam
 
 ---
 
-## D. Will sections — content requirements
+## E. Will sections — content requirements
 
 ### Will Overview *(overview)*
 Testator full name; execution date and governing state law; family recitals (spouse, children with ages if stated); whether it is a pour-over Will (flag prominently); prior-Will revocation clause; any codicil and exactly what it changes.
@@ -129,7 +154,7 @@ Only if the Will contains executor powers, no-contest clauses, or other provisio
 
 ---
 
-## E. Personal directive sections — content requirements
+## F. Personal directive sections — content requirements
 
 ### Durable Power of Attorney *(trustee)*
 - Type and activation: **immediate vs. springing**; the incapacity standard (who determines it and how).
