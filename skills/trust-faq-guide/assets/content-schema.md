@@ -18,7 +18,8 @@ Unknown keys are rejected. On any failure the build prints the problem and write
 | `prepared` | yes | e.g. `"September 2026"` |
 | `quick_ref` | yes | Rows of the §1 key-facts table. See below. |
 | `sections` | yes | Collapsible sections, in order. Numbering starts at §2 automatically. |
-| `document_sections` | yes | **Every** section/article heading you found in the document, as a flat list. See below — every citation in the guide is checked against it. |
+| `document_sections` | yes | **Every** section/article heading you found in the document, as a flat list. Every citation is checked against it. |
+| `source_text` | yes | Path (or list of paths) to the document text you saved while reading. Every `quote` is looked up in it. |
 | `layout` | no | `"single"` (default) or `"two-column"` (mirror/paired RLTs only). |
 | `grantor_labels` | two-column only | `["Robert", "Margaret"]` — grantor 1 is named first in the preamble. |
 | `eyebrow` | no | Teal header label. Defaults to `"Trust & Estate FAQ"`. |
@@ -37,6 +38,42 @@ and nothing else:
 Any other class fails the build — it would render unstyled. Never use `<img>`, `data:` URIs,
 `mask:`, external stylesheets or emoji; all are rejected (the first three are silently blocked
 by the hosting platform's CSP, so they fail invisibly in the browser rather than loudly).
+
+## `source_text` and `quote` — how verification happens
+
+Save the text of each document you read to a file, and list the paths:
+
+```json
+"source_text": ["/mnt/user-data/outputs/_source_steven.txt",
+                "/mnt/user-data/outputs/_source_julie.txt"]
+```
+
+Then **every citation carries a `quote`** — a dozen or more characters of the document's own
+words, copied verbatim:
+
+```json
+{"k": "Governing law", "v": "Massachusetts", "cite": "§1.4",
+ "quote": "governed by the laws of the Commonwealth of Massachusetts"}
+```
+
+The build looks up each quote in the source text (whitespace and smart quotes normalised) and
+**fails on any it cannot find**. That is the verification: you are already reading §1.4 when you
+write it, so record the words at that moment instead of re-reading the whole document afterwards.
+Claims whose quote is confirmed arrive on the worksheet already marked `[x]`.
+
+Where quotes go:
+- Quick Reference rows with a `cite`
+- section items whose answer contains a `section-ref`
+- `table`, `flowchart`, `two_col` and `identical` blocks — **one block-level quote each**, not one
+  per row; quote the passage the block summarises
+
+Not needed on: `not_found` rows, items with `"cite": false`, and rows that characterise the
+document rather than quote a provision ("Document: joint revocable living trust for a married
+couple") — those carry no citation, and get marked by hand on the worksheet.
+
+**What a confirmed quote proves:** the document contains those words. **What it does not prove:**
+that they sit at the cited section, or that your summary of them is right. Do not paraphrase into
+a quote, and never write a quote you have not copied from the text.
 
 ## `document_sections` — the citation index
 

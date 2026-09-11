@@ -44,6 +44,21 @@ LOGO_TAIL_SENTINEL = 'matrix(100,0,0,-100,1932.16,319.901)'
 
 CATS = ("overview", "trustee", "lifecycle", "distribution", "legal")
 
+# --- quote checking ---------------------------------------------------------
+# A citation says "the document states this, here". A quote proves it: the exact
+# words are looked up in the document text the model saved, so a fabricated or
+# misremembered provision fails the build. This replaces a second read-through of
+# the document with a mechanical check done while the facts are being written.
+SMART = {"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
+         "\u2013": "-", "\u2014": "-", "\u00a0": " "}
+
+
+def normalise(t):
+    for a, b in SMART.items():
+        t = t.replace(a, b)
+    t = re.sub(r"<[^>]+>", " ", t)
+    return re.sub(r"[\s]+", " ", t).strip().lower()
+
 # A citation must look like one of these. Deliberately permissive about the label
 # itself -- documents number themselves in many ways -- but it must be a reference,
 # not prose.
@@ -141,6 +156,29 @@ def check_inline(html, where, allowed_classes):
 
 # Every citation the build emits or finds in authored text, for the index check.
 CITES_SEEN = []
+
+# The normalised document text, and the outcome of every quote checked against it.
+SRC = {"text": "", "raw_len": 0}
+QUOTES = []          # (ok, quote, where, cite)
+
+
+def check_quote(quote, where, cite=None):
+    """Confirm an authored quote really appears in the document text."""
+    if not quote or not str(quote).strip():
+        return False
+    q = normalise(str(quote))
+    if len(q) < 12:
+        err(f'{where}: quote "{quote}" is too short to confirm anything - give at '
+            f"least a dozen characters of the document's own words")
+        QUOTES.append((False, quote, where, cite))
+        return False
+    ok = q in SRC["text"]
+    if not ok:
+        err(f'{where}: the quote does not appear in the document text - '
+            f'"{str(quote)[:70]}". Quote the document verbatim; do not paraphrase, '
+            f"and never write a quote you have not copied from it.")
+    QUOTES.append((ok, quote, where, cite))
+    return ok
 
 
 def note_cite(ref, where):
@@ -282,6 +320,15 @@ def render_blocks(blocks, where, cls, indent="        "):
     for i, b in enumerate(blocks or []):
         kind = b.get("type")
         w = f"{where} block {i} ({kind})"
+        # One quote per block, not per row: a table or flowchart summarises an article,
+        # so the article's own words confirm it without quoting every cell.
+        blob = json.dumps(b)
+        if "section-ref" in blob or b.get("cite"):
+            if not b.get("quote"):
+                err(f'{w}: cites the document but carries no "quote". Add one passage '
+                    f"in the document's own words covering what this block states.")
+            else:
+                check_quote(b["quote"], w, b.get("cite"))
         if kind == "table":
             out.append(render_table(b, w, cls, indent))
         elif kind == "flowchart":
@@ -367,6 +414,18 @@ def render_quick_ref(rows, cls):
             f'a citation. Cite the provision each fact comes from, or set "cite": false '
             f"on a row that is a characterisation rather than a provision.")
 
+    # A cited row asserts what the document says, so it carries the words.
+    for i, r in enumerate(rows):
+        if r.get("not_found") or r.get("cite") is False:
+            continue
+        if r.get("cite"):
+            if not r.get("quote"):
+                err(f'quick_ref[{i}] ({r.get("k","")}): cited {r["cite"]} but carries no '
+                    f'"quote". Add the document\'s own words for this fact - that is how '
+                    f"the citation is confirmed.")
+            else:
+                check_quote(r["quote"], f'quick_ref[{i}] ({r.get("k","")})', r["cite"])
+
     hl_count = sum(1 for r in rows if r.get("hl"))
     if hl_count > 3:
         err(f"quick_ref: {hl_count} rows are highlighted; at most 3 - past that the "
@@ -433,6 +492,15 @@ def render_sections(sections, cls):
             # An answer states what the document says, so it must say where.
             # "cite": false marks a deliberate exception -- a general explanation
             # that is not a provision of this document.
+            if it.get("cite") is not False and "not-found" not in a:
+                if "section-ref" in a and not it.get("quote"):
+                    err(f'section {num} item {i}: the answer cites the document but '
+                        f'carries no "quote". Add the document\'s own words for the '
+                        f"provision it states. Question: {q[:60]}")
+                elif it.get("quote"):
+                    check_quote(it["quote"], f"section {num} item {i}",
+                                " ".join(re.findall(
+                                    r'<span class="section-ref">([^<]*)</span>', a)))
             if it.get("cite") is not False:
                 if "section-ref" not in a and "not-found" not in a:
                     err(f'section {num} ("{title}") item {i}: the answer carries no '
@@ -587,12 +655,12 @@ def main():
 
     known = {"title", "eyebrow", "doc_type_dates", "layout", "grantor_labels",
              "binder", "preparer", "prepared", "quick_ref", "banners", "sections",
-             "document_sections"}
+             "document_sections", "source_text"}
     for k in data:
         if k not in known:
             err(f'unknown top-level key "{k}" - allowed: {sorted(known)}')
     for req in ("title", "doc_type_dates", "preparer", "prepared", "quick_ref",
-                "sections", "document_sections"):
+                "sections", "document_sections", "source_text"):
         if not data.get(req):
             err(f'required key "{req}" is missing or empty')
     layout = data.get("layout", "single")
@@ -601,6 +669,22 @@ def main():
     two_col = layout == "two-column"
     if two_col and len(data.get("grantor_labels") or []) != 2:
         err('two-column layout needs grantor_labels: ["Name 1", "Name 2"]')
+
+    # Load the document text the model saved while reading, so quotes can be checked.
+    src_paths = data.get("source_text") or []
+    if isinstance(src_paths, str):
+        src_paths = [src_paths]
+    source = ""
+    for sp in src_paths:
+        try:
+            source += "\n" + Path(sp).read_text(errors="replace")
+        except OSError as e:
+            err(f'source_text: cannot read "{sp}": {e}. Save the extracted document '
+                f"text to a file as you read it -- quotes are checked against it.")
+    if src_paths and not source.strip():
+        err("source_text: the files are empty. They must hold the document text you read.")
+    SRC["text"] = normalise(source)
+    SRC["raw_len"] = len(source)
 
     die()  # stop before rendering if the shape is wrong
 
@@ -668,10 +752,12 @@ def main():
         print(f"    {len(unused)} section(s) in the document are never cited: "
               f"{', '.join(unused[:12])}{' ...' if len(unused) > 12 else ''}")
         print(f"    Check whether any of those belong in the guide.")
-    print("    Citations were checked for shape and for existence in "
-          "document_sections.")
-    print("    They were NOT checked for correctness - only reading the document "
-          "confirms a\n    citation points at the right provision.")
+    ok = sum(1 for q in QUOTES if q[0])
+    print(f"    quotes: {ok} of {len(QUOTES)} confirmed word-for-word against "
+          f"{len(src_paths)} source file(s) ({SRC['raw_len']:,} chars)")
+    print("    A confirmed quote proves the document contains those words. It does not "
+          "prove they\n    sit at the cited section, or that the surrounding summary "
+          "reads them correctly.")
     nf = html.count("not-found")
     if nf:
         print(f"    {nf} provision(s) flagged NOT FOUND - list them in the post-output notes")

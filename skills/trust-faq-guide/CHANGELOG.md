@@ -8,6 +8,48 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v3.0 — 2026-09 — Verify while reading, not afterwards
+
+The v2.9 flow needed two passes over the document: write the facts, then re-read everything to
+confirm them. On the Krasker mirror pair that meant ~94 pages read twice and 72 claims marked by
+hand, across three turns. Reported as too much friction to be useful — correctly.
+
+What the second pass actually found, on that job: **zero** `[!]` and three `[?]`. All three `[?]`s
+were structural absences — no child named in either trust, no POA cross-reference, no pour-over
+Will provided — every one of them knowable while the facts were being written. The second pass
+was a model re-reading its own work minutes later in the same context and confirming it. It cost
+half the job and found nothing that required re-reading.
+
+So verification moved to where the reading already happens.
+
+**Every citation now carries a `quote`** — a dozen or more characters of the document's own words,
+copied verbatim. The model saves the document text it read to a file, lists it in the new required
+`source_text`, and `build.py` looks up every quote in it, **failing on any it cannot find**. When
+the model writes §4.2 it is already looking at §4.2, so it records the words then. Tables,
+flowcharts and two-column blocks take one block-level quote each rather than one per row.
+
+**The worksheet arrives pre-marked.** A claim whose quote was confirmed word-for-word comes back
+`[x]` with the quote shown beside it, ready to read against the document at a glance. What still
+needs a hand mark is only what could not be quoted: NOT FOUND flags, general explanations,
+characterisations that quote nothing, and banners. On a realistic two-column set that is 18 of 22
+claims pre-marked, 4 to mark — against 72 before.
+
+This is also strictly stronger than what it replaces. v2.2 could confirm a citation *existed* in
+`document_sections`, a list the model wrote itself. v3.0 confirms the quoted words are really in
+the document text. A fabricated provision, a misremembered amount, a paraphrase presented as the
+document's language — each fails the build now rather than reaching an advisor.
+
+**What it still does not prove**, said on every build: that the quoted words sit at the cited
+section, or that the summary around them reads them correctly. Those need a person. The difference
+is that the person is now checking a short quote against a section, not re-reading 94 pages.
+
+Verified from the shipped package: quotes confirmed and reported; worksheet pre-marked; fabricated,
+missing, too-short and unfindable quotes each refused; an unreadable or empty `source_text` refused;
+a wrong block-level quote on a two-column block refused; two-column and three-way-split quoted
+content both build; the 14 build negatives and the binder suite unaffected.
+
+---
+
 ## v2.9 — 2026-09 — Production
 
 Promoted after a complete, clean real run on the hardest case: the Krasker mirror pair, two

@@ -106,7 +106,7 @@ def claims(data):
     """Every decision-driving assertion in the content file, with its citations."""
     out = []
 
-    def add(kind, text, cites, loc):
+    def add(kind, text, cites, loc, quote=None):
         text = " ".join(strip_tags(text).split())
         if not text:
             return
@@ -116,7 +116,8 @@ def claims(data):
             if c and c not in seen:
                 seen.add(c)
                 uniq.append(c)
-        out.append({"kind": kind, "text": text[:220], "cites": uniq, "loc": loc})
+        out.append({"kind": kind, "text": text[:220], "cites": uniq, "loc": loc,
+                    "quote": quote})
 
     for i, r in enumerate(data.get("quick_ref") or []):
         if r.get("not_found"):
@@ -129,7 +130,8 @@ def claims(data):
         elif isinstance(v, list):
             v = "; ".join(str(x) for x in v)
         add("QR", f'{r.get("k","")}: {v}',
-            ([r["cite"]] if r.get("cite") else []) + cites_in(v), f"quick_ref[{i}]")
+            ([r["cite"]] if r.get("cite") else []) + cites_in(v), f"quick_ref[{i}]",
+            r.get("quote"))
 
     for si, s in enumerate(data.get("sections") or []):
         num = si + 2
@@ -139,27 +141,31 @@ def claims(data):
                 for ri, row in enumerate(b.get("rows") or []):
                     cells = [strip_tags(c) for c in row]
                     add("TABLE", " | ".join(cells),
-                        [c for cell in row for c in cites_in(cell)], f"{loc}.rows[{ri}]")
+                        [c for cell in row for c in cites_in(cell)], f"{loc}.rows[{ri}]",
+                        b.get("quote"))
             elif b.get("type") == "flowchart":
                 for sti, st in enumerate(b.get("stages") or []):
                     legs = st.get("branch") or [st]
                     for leg in legs:
                         add("STAGE", f'{leg.get("stage","")}: {leg.get("body","")}',
                             ([leg["cite"]] if leg.get("cite") else [])
-                            + cites_in(leg.get("body", "")), f"{loc}.stages[{sti}]")
+                            + cites_in(leg.get("body", "")), f"{loc}.stages[{sti}]",
+                            b.get("quote"))
             elif b.get("type") in ("two_col", "identical"):
                 for side in (("g1", "g2") if b.get("type") == "two_col" else ("body",)):
                     part = b.get(side) if side != "body" else {"body": b.get("body")}
                     if part:
                         add("COL", f'{part.get("head","")} {part.get("body","")}',
-                            cites_in(part.get("body", "")), f"{loc}.{side}")
+                            cites_in(part.get("body", "")), f"{loc}.{side}",
+                            b.get("quote"))
         for ii, it in enumerate(s.get("items") or []):
             a = it.get("a", "")
             loc = f"sections[{si}].items[{ii}]"
             if "not-found" in a:
                 add("NOTFOUND", f'{it.get("q","")} -> flagged NOT FOUND', cites_in(a), loc)
             elif SIGNAL.search(strip_tags(a)):
-                add("ANSWER", f'{it.get("q","")} -> {a}', cites_in(a), loc)
+                add("ANSWER", f'{it.get("q","")} -> {a}', cites_in(a), loc,
+                    it.get("quote"))
     for i, b in enumerate(data.get("banners") or []):
         add("BANNER", f'{b.get("label","")} {b.get("body","")}',
             cites_in(b.get("body", "")), f"banners[{i}]")
@@ -224,6 +230,19 @@ def do_extract(content_path, out_path, quiet=False):
     """content_path may be one path or a list of them, matching build.py's merge."""
     paths = content_path if isinstance(content_path, (list, tuple)) else [content_path]
     data = G.load_content(paths)
+    # Load the document text so a claim's quote can be confirmed here too. A claim whose
+    # quote is confirmed word-for-word is pre-marked: the check already happened, when
+    # the fact was written. Only what could not be quoted still needs a human mark.
+    src = ""
+    srcs = data.get("source_text") or []
+    if isinstance(srcs, str):
+        srcs = [srcs]
+    for sp in srcs:
+        try:
+            src += "\n" + Path(sp).read_text(errors="replace")
+        except OSError:
+            pass
+    src = G.normalise(src)
     cl = claims(data)
     warn = cross_checks(data)
     idx = [c.strip() for c in data.get("document_sections") or []]
@@ -251,10 +270,24 @@ def do_extract(content_path, out_path, quiet=False):
               "descendants\" generally, say) gives it nothing to compare. Confirm by "
               "reading: is any trustee also a beneficiary, and if so does the guide say "
               "who decides distributions to that person?", ""]
+    confirmed = 0
+    for c in cl:
+        q = c.get("quote")
+        c["ok"] = bool(q and src and G.normalise(str(q)) in src)
+        confirmed += c["ok"]
     L += [f"## Claims ({len(cl)})", ""]
+    if confirmed:
+        L += [f"{confirmed} of {len(cl)} are already marked `[x]`: the quote recorded when "
+              f"the fact was written was found word-for-word in the document text. The "
+              f"quote is shown so it can be read against the document at a glance.", "",
+              f"The rest carry no quote — a NOT FOUND flag, or a general explanation — and "
+              f"need marking by hand.", ""]
     for i, c in enumerate(cl, 1):
         cites = " ".join(c["cites"]) or "(no citation)"
-        L.append(f'- [ ] {i:03d} | {c["kind"]} | {cites} | {c["text"]}')
+        mark = "x" if c["ok"] else " "
+        L.append(f'- [{mark}] {i:03d} | {c["kind"]} | {cites} | {c["text"]}')
+        if c["ok"]:
+            L.append(f'      quoted: "{str(c["quote"])[:150]}"')
     L += ["",
           "## Citation coverage",
           "",

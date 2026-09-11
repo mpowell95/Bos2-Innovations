@@ -111,9 +111,10 @@ Branch: HTML guide -> Steps 4 and 5. PowerPoint -> Step 6. Family binder -> Step
 
 ## Step 4 — Write `content.json` and run the build
 
-Read **`assets/content-schema.md`** for the full field reference — including `document_sections`,
-the list of every heading you found in the document, which is required and which every citation is
-checked against. Then write the content file and run:
+Read **`assets/content-schema.md`** for the full field reference — including `document_sections`
+(every heading you found, which every citation is checked against), `source_text` (the document
+text you saved while reading), and `quote` (the words that confirm each citation). Then write the
+content file and run:
 
 ```
 BUILD=$(find /mnt/skills -path '*trust-faq-guide*/assets/build.py' | head -1)
@@ -124,12 +125,18 @@ python3 "$BUILD" content.json /mnt/user-data/outputs/[Name]_Rev_Trust_FAQ_Guide.
 
 - **Every material fact carries a citation** — `"cite": "§4.2"` on a Quick Reference row, or
   `<span class="section-ref">§4.2</span>` inline in an answer. Wills use `Art. Three`; personal
-  documents use `POA Art. One`. This is enforced: an answer with no citation and no NOT FOUND
-  flag fails the build, as does a citation that is not in `document_sections`. An answer that is
-  a general explanation rather than a provision sets `"cite": false`.
-- **Never cite a section you did not read.** The build confirms a citation *exists* in the
-  document; it cannot confirm it is the *right* one. Padding `document_sections` to make a
-  citation pass defeats the only mechanical check on citations there is.
+  documents use `POA Art. One`. An answer with no citation and no NOT FOUND flag fails the build,
+  as does a citation not in `document_sections`. An answer that is a general explanation rather
+  than a provision sets `"cite": false`.
+- **Every citation carries a `"quote"`** — a dozen or more characters of the document's own words,
+  copied verbatim, for the provision being stated. Save the document text you read to a file and
+  list it in `source_text`; the build looks up every quote in it and **fails on any quote it
+  cannot find**. This is how verification happens: you are already at §4.2 when you write it, so
+  record the words then. Do not paraphrase, and never write a quote you have not copied.
+  Tables and flowcharts take one block-level quote each, not one per row.
+- **Never cite a section you did not read.** A confirmed quote proves the document contains those
+  words; it does not prove they sit at the cited section, or that your summary reads them
+  correctly. Padding `document_sections` or quoting the wrong passage defeats the point.
 - **Never fabricate.** A provision you can't find gets `"not_found": true` (Quick Reference) or
   `<span class="not-found">[NOT FOUND — verify in original document]</span>` inline, and goes in
   the post-output notes.
@@ -156,11 +163,12 @@ rather than delivering something unverified.
 
 **Required for every HTML guide. Do not deliver before this passes.**
 
-`build.py` guarantees the guide is well formed. It cannot tell whether a name, amount, age or
-citation is *right*. That is this step.
+Most of this already happened in Step 4: every citation carried a quote, and the build confirmed
+each quote word-for-word against the document text. The worksheet arrives with those claims
+**already marked `[x]`**, with the quote shown beside each.
 
-`build.py` already wrote the worksheet next to the guide, named
-`[GuideName]_verification.md`. Mark it, then gate on it:
+What is left to mark by hand is the rest — NOT FOUND flags, general explanations, characterisations
+of the document that quote nothing, and any banner you raised. Usually a handful.
 
 ```
 V=$(find /mnt/skills -path '*trust-faq-guide*/assets/verify.py' | head -1)
@@ -168,13 +176,13 @@ V=$(find /mnt/skills -path '*trust-faq-guide*/assets/verify.py' | head -1)
 python3 "$V" check /mnt/user-data/outputs/[GuideName]_verification.md
 ```
 
-A long worksheet is marked in batches, over more than one turn if needed:
-`verify.py mark <worksheet> <marks.txt>` applies a batch and reports how many remain without
-failing; `check` runs once at the end. Format and staging: `references/large-guides.md`.
+If many claims still need marking, `verify.py mark <worksheet> <marks.txt>` applies a batch and
+reports how many remain without failing; `check` runs once at the end. Format and staging:
+`references/large-guides.md`.
 
 The worksheet lists every decision-driving claim — names, amounts, ages, succession order,
-distribution standards, flowchart stages, table rows, NOT FOUND flags — with its citation. Mark
-each by **going back to the document**:
+distribution standards, flowchart stages, table rows, NOT FOUND flags. For the ones still
+unmarked, mark each by **going back to the document**:
 
 - `[x]` confirmed — the document says this, at this citation
 - `[!]` wrong — note what the document actually says, then fix `content.json`, rerun `build.py`,
