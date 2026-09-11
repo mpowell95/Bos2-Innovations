@@ -309,9 +309,12 @@ def render_quick_ref(rows, cls):
 def render_sections(sections, cls):
     """Section numbering, data-cat, chevrons, and open/closed state are all
     generated here. Defaults come from the shell's rule and cannot be overridden:
-    sec.2 open with its first question open; sec.3-4 open, questions closed;
-    sec.5 onward fully closed."""
+    sec.2-4 open, sec.5 onward closed, and exactly ONE question open -- the first
+    question of the earliest open section that actually has questions. Anchoring
+    it to sec.2 literally would leave no question open at all whenever sec.2 is
+    the flowchart-only structure overview, which is the common case."""
     out = []
+    first_q_opened = False
     for idx, s in enumerate(sections):
         num = idx + 2
         cat = s.get("cat")
@@ -344,7 +347,9 @@ def render_sections(sections, cls):
             q, a = it.get("q", ""), it.get("a", "")
             if not q or not a:
                 err(f"section {num} item {i}: needs both q and a")
-            q_open = (num == 2 and i == 0)
+            q_open = sec_open and not first_q_opened
+            if q_open:
+                first_q_opened = True
             check_inline(a, f"section {num} item {i} answer", cls)
             out.append('        <div class="faq-item">')
             out.append(f'          <button type="button" class="faq-q" '
