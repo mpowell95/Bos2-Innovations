@@ -8,6 +8,49 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.9 — 2026-09 — Production
+
+Promoted after a complete, clean real run on the hardest case: the Krasker mirror pair, two
+47-page trusts pulled from Box, built and verified across two turns.
+
+The guide: `<style>`, `<script>` and logo byte-identical to the template; 15 sections, all with
+correct open/closed defaults; 46 questions with zero aria/.open mismatches and exactly one open
+answer; no undefined classes; 94 citations covering all 28 articles; correct two-column layout
+labelled with the grantors' names.
+
+The verification pass did its job rather than rubber-stamping it. Of 72 claims, 69 confirmed and
+**three marked `[?]`** with substantive reasons: neither trust names any child (both dispose to
+"my descendants" generically), neither cross-references a POA or health care proxy, and Article IV
+implies a companion pour-over Will that was never provided. Those are precisely the honest
+"cannot confirm from this document" answers the worksheet exists to capture, and no automated check
+could have produced them.
+
+It also answered the interested-trustee cross-check with real analysis of the fact pattern:
+Steven's trust requires a Disinterested Co-Trustee at all times, so an interested Julie never
+decides distributions to herself alone; Julie's trust requires one only for the Descendants'
+Separate Trusts, so Steven could decide principal distributions to himself — but under the
+ascertainable HEMS standard that applies whenever no Disinterested Trustee serves, not "for any
+purpose." That is the v1.1 self-dealing rule, prose-only for eight versions, applied correctly to
+a live document.
+
+And the coverage report earned its place: Articles IX, XVI, XX and XXVII were uncited in the first
+build. The run went back and worked them in. All 28 are now cited.
+
+Renamed from trust-faq-guide-test: frontmatter `name:` and the folder. Nothing else — the builders
+resolve their own paths, verified under the production name.
+
+### What this version does not do
+
+It does not verify that a fact is correct, only that the guide was checked against the document
+and that every citation exists in it. A `[x]` is a person or a model saying they looked; nothing
+can force an honest look. The advisor reads the guide against the executed document before it
+reaches a client, and Step 8 requires saying so on delivery.
+
+PPTX mode is unchanged from v1.18 — the `pptx` skill owns file generation there, so there is no
+shell to drift. The family binder is templated and tested, but has not yet run on real documents.
+
+---
+
 ## v2.8 — 2026-09 — Multi-turn work, planned for rather than discovered
 
 A real mirror-pair run (Krasker, two 47-page trusts from Box) did the right thing and still could
