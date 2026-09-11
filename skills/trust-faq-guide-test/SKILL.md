@@ -1,5 +1,5 @@
 ---
-name: trust-faq-guide_test
+name: trust-faq-guide-test
 description: >
   Creates estate planning document guides in two formats: (1) an interactive HTML FAQ with
   citations and collapsible sections, or (2) a simplified client-facing PowerPoint deck (~10
@@ -15,9 +15,9 @@ description: >
 ---
 
 <!--
-v2.0 TEST COPY — named trust-faq-guide_test so it can sit alongside the live
+v2.0 TEST COPY — named trust-faq-guide-test so it can sit alongside the live
 trust-faq-guide. Both are installed during testing; if the wrong one fires, ask for
-"the trust-faq-guide_test skill" by name.
+"the trust-faq-guide-test skill" by name.
 
 TO PROMOTE TO PRODUCTION: change the frontmatter `name:` and the folder name to
 trust-faq-guide. Nothing else — the build command resolves its own path.
