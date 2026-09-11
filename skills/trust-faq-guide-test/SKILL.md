@@ -227,7 +227,9 @@ Save to `/mnt/user-data/outputs/[Name]_Trust_Summary.pptx`.
 ## Step 6 — Family Estate Plan Binder
 
 If the user asked for a binder, produce each individual guide via Step 4 first, then read
-**`references/binder-guide.md`** and follow it.
+**`references/binder-guide.md`** and follow it. Same pattern as Step 4: you write a JSON file,
+`assets/build_binder.py` renders it. Set `binder` in each guide's content.json so its
+back-to-index crumb is generated.
 
 ---
 

@@ -7,8 +7,10 @@
      of Part 5's assembly rules, and the entire Part 6 binder stylesheet. Six
      versions of shell drift were caused by exactly that.
 
-     The runtime source of truth is now assets/guide-template.html, which is read
-     only by assets/build.py using open().read() — not subject to this truncation.
+     The runtime source of truth is now assets/guide-template.html (guides) and
+     assets/binder-template.html (the family binder index), both read only by their
+     builders using open().read() — not subject to this truncation. As of v2.1
+     NOTHING reads this file at run time.
 
      This file is kept for maintainers, to explain what the shell means and why.
      If you must read it, read EXPLICIT LINE RANGES, never the whole file.

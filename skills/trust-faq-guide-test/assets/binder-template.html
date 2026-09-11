@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Matt Powell - Cerity Partners BOS2">
+<!-- Tool: Trust & Estate Guide skill - built by Matt Powell, Cerity Partners BOS2.
+     The preparer of THIS document is named in the page footer. -->
+<title>Cerity Partners &mdash; {{FAMILY}} Family Estate Plan</title>
+<!-- No Google Fonts <link> - the hosting platform's CSP silently blocks external
+     stylesheets, data: images, and mask/background-image url(data:...). Never add any.
+     The font stacks below fall through to system fonts. -->
+<style>
+  :root {
+    --cobalt: #293340; --fiord: #3A5772; --fiord-l: #61798E;
+    --clay: #5C574D; --clay-l: #6F665A; --desert: #D7C8B6; --vellum: #F4F1EE;
+    --tradewind: #5FC3B1; --mandarin: #D26431; --white: #fff;
+    --cat-overview: #344D63; --cat-trustee: #2f7d6e; --cat-lifecycle: #b5561f;
+    --border: #D7C8B6; --bg: #F4F1EE; --ink: #293340;
+    --warn-bg: #fdf1e3; --warn-bd: #D26431; --warn-tx: #8a3d16;
+    --flag-bg: #fbe9e4; --flag-bd: #c0492a; --flag-tx: #8f2f18;
+    --info-bg: #e3f2ee; --info-bd: #2f7d6e; --info-tx: #1f5147;
+    --maxw: 1240px;   /* matches the guide's --maxw so header/main widths line up when linked together */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', system-ui, 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: 1.6; background: var(--bg); color: var(--ink); }
+  .ic { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex-shrink: 0; fill: currentColor; }
+
+  .page-header { background: var(--cobalt); color: white; padding: 13px 0 12px; }
+  .hdr-inner { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+  .hdr-top { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .hdr-main { display: flex; align-items: center; gap: 14px; }
+  .hdr-logo, .hdr-logo.cp-logo, .hdr-main > svg { height: 42px; width: auto; color: #fff; }
+  .hdr-div { width: 1px; height: 46px; background: rgba(255,255,255,.22); }
+  .hdr-text { display: flex; flex-direction: column; gap: 4px; }
+  .hdr-eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--tradewind); }
+  .hdr-title { font-family: 'DM Sans', system-ui, sans-serif; font-size: 27px; font-weight: 700; color: white; line-height: 1.05; }
+  .hdr-dates { font-size: 12px; color: rgba(255,255,255,.55); text-align: right; }
+  .context-banner { display: inline-flex; align-items: flex-start; gap: 8px; margin-top: 12px; background: #fbeeea; color: var(--flag-tx); border: 1px solid #f0d2c8; border-radius: 8px; padding: 9px 14px; font-size: 12.5px; font-weight: 600; }
+  .context-banner .ic { color: var(--flag-tx); }
+
+  main { max-width: var(--maxw); margin: 24px auto; padding: 0 24px 60px; }
+
+  .panel { background: white; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(41,51,64,.06); margin-bottom: 20px; overflow: hidden; }
+  .panel-header { padding: 13px 20px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: white; }
+  .panel-header.overview { background: var(--cat-overview); }
+  .panel-header.trustee { background: var(--cat-trustee); }
+  .panel-header.lifecycle { background: var(--cat-lifecycle); }
+  .panel-header.flag { background: var(--mandarin); }
+  .panel-body { padding: 16px 20px; }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .data-table th { background: var(--vellum); color: var(--clay); font-weight: 700; padding: 9px 12px; text-align: left; border-bottom: 2px solid var(--desert); }
+  .data-table td { padding: 9px 12px; border-bottom: 1px solid #f0ede8; vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #faf8f5; }
+  .data-table a { color: var(--fiord); text-decoration: none; font-weight: 600; }
+  .data-table a:hover { text-decoration: underline; }
+
+  .pill { display: inline-block; border-radius: 20px; padding: 2px 10px; font-size: 11.5px; font-weight: 700; letter-spacing: .03em; }
+  .pill-active { background: #dbeee9; color: #1f5147; }
+  .pill-revocable { background: #e4ebf1; color: #344D63; }
+  .pill-irrevocable { background: #f7e2d6; color: #8a3d16; }
+  .pill-super { background: #efe9e1; color: var(--clay); }
+
+  .person { font-weight: 700; color: var(--cat-overview); }
+  .role-list { margin: 4px 0 0 0; padding-left: 18px; font-size: 13px; }
+  .role-list li { margin-bottom: 2px; }
+  .deceased { color: var(--mandarin); font-weight: 600; }
+
+  .flow-timeline { display: flex; flex-direction: column; gap: 0; }
+  .flow-row { display: grid; grid-template-columns: 150px 1fr; gap: 0; border-bottom: 1px solid #efe9e1; }
+  .flow-row:last-child { border-bottom: none; }
+  .flow-when { background: var(--vellum); padding: 12px 14px; font-weight: 700; font-size: 12.5px; color: var(--cat-overview); border-right: 3px solid var(--cat-overview); }
+  .flow-when.done { color: var(--mandarin); border-right-color: var(--mandarin); }
+  .flow-what { padding: 12px 16px; font-size: 13px; }
+  .flow-what .doc { font-weight: 600; color: var(--cat-trustee); }
+
+  .banner { border-radius: 4px; padding: 10px 16px; margin: 0 0 10px; font-size: 13.5px; display: flex; gap: 9px; align-items: flex-start; }
+  .banner:last-child { margin-bottom: 0; }
+  .banner .ic { margin-top: 2px; }
+  .warning-banner { background: var(--warn-bg); border-left: 4px solid var(--warn-bd); }
+  .warning-banner .ic, .warning-banner strong { color: var(--warn-tx); }
+  .flag-banner { background: var(--flag-bg); border-left: 4px solid var(--flag-bd); }
+  .flag-banner .ic, .flag-banner strong { color: var(--flag-tx); }
+  .info-banner { background: var(--info-bg); border-left: 4px solid var(--info-bd); }
+  .info-banner .ic, .info-banner strong { color: var(--info-tx); }
+  .section-ref { font-size: 11px; background: #e9e3da; color: var(--clay); border-radius: 3px; padding: 1px 5px; margin-left: 4px; font-family: ui-monospace, monospace; white-space: nowrap; }
+
+  .page-footer { border-top: 3px solid var(--desert); padding: 16px 40px; background: white; font-size: 11.5px; color: var(--clay); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 640px) { .flow-row { grid-template-columns: 1fr; } .flow-when { border-right: none; border-bottom: 2px solid var(--cat-overview); } }
+  @media print { .page-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .panel { break-inside: avoid; } }
+</style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="hdr-inner">
+      <div class="hdr-top">
+        <div class="hdr-main">
+          <svg class="cp-logo hdr-logo" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 2054.13 461.62">
+          <defs>
+          <path id="font_0_1" d="M.73599246 .33312989C.73599246 .5273895 .5779877 .6845703 .3849945 .6845703 .19099427 .6845703 .032989503 .5273895 .032989503 .33312989 .032989503 .14013672 .19099427-.017852784 .3849945-.017852784 .5779877-.017852784 .73599246 .14013672 .73599246 .33312989M.68299868 .33312989C.68299868 .1681366 .548996 .03515625 .3849945 .03515625 .21998596 .03515625 .08699036 .1681366 .08699036 .33312989 .08699036 .49838258 .22099304 .6315613 .3849945 .6315613 .548996 .6315613 .68299868 .49838258 .68299868 .33312989M.5529938 .1431427 .46798707 .29911805C.5099945 .3151245 .5439911 .3531494 .5439911 .40725709 .5439911 .4783783 .4909973 .5253906 .4079895 .5253906H.24198914V.1431427H.30899049V.2861328H.40299989L.47999574 .1431427H.5529938M.47499085 .40525819C.47499085 .36817933 .45199586 .3411255 .40699769 .3411255H.30899049V.4703827H.40699769C.44999696 .4703827 .47499085 .44332887 .47499085 .40525819Z"/>
+          </defs>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M7096.34 3915.85C6981.6 4082.49 6804.04 4186.28 6563.64 4186.28 6159.32 4186.28 5894.36 3891.26 5894.36 3429.6 5894.36 2965.19 6162.07 2667.41 6558.16 2667.41 6790.37 2667.41 6981.6 2771.24 7096.34 2940.6L7254.78 2823.14C7101.81 2612.76 6861.41 2484.38 6563.64 2484.38 6033.66 2484.38 5689.46 2888.7 5689.46 3426.85 5689.46 3965.02 6033.66 4369.31 6560.92 4369.31 6869.61 4369.31 7093.62 4238.21 7246.59 4033.31L7096.34 3915.85" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M7620.66 2517.17V4336.56H8874.56V4156.25H7814.61V3571.65H8737.96V3394.06H7814.61V2697.48H8901.87V2517.17H7620.66" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M10978.9 2517.17V4336.56H11170.2V2517.17H10978.9" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M12311 4156.25V2517.17H12117V4156.25H11480.5V4336.56H12950.2V4156.25H12311" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M13996.4 3267.25V2517.17H13799.7V3267.25L13182.3 4336.56H13389.7L13903.5 3448.71 14416.7 4336.56H14624.1L13996.4 3267.25" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M9961.74 4156.25H9382.58V3467.83H9969.93C10207.6 3467.83 10349.6 3607.16 10349.6 3809.3 10349.6 4019.64 10196.7 4156.25 9961.74 4156.25ZM10382.4 2517.17 9937.64 3287.55H9382.58V2517.17H9191.36V4336.56H9967.18C10316.9 4336.56 10551.8 4137.14 10551.8 3822.97 10551.8 3571.65 10375.1 3384.3 10142.9 3310.54L10601 2517.17H10382.4" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M6592.57 1191.47C6882.15 1191.47 7013.26 1338.96 7013.26 1554.78 7013.26 1770.59 6882.15 1918.12 6592.57 1918.12H6046.2V1191.47H6592.57ZM6589.82 1011.16H6046.2V279.031H5854.98V2098.43H6589.82C6999.62 2098.43 7215.43 1879.86 7215.43 1554.78 7215.43 1229.69 6999.62 1011.16 6589.82 1011.16" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M8030.51 1904.45 7664.45 1005.68H8385.66L8030.51 1904.45ZM8677.96 279.031 8456.67 825.41H7590.69L7369.43 279.031H7167.29L7921.25 2098.43H8139.78L8893.77 279.031H8677.96" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M9961.74 1918.12H9382.58V1229.69H9969.93C10207.6 1229.69 10349.6 1369.02 10349.6 1571.17 10349.6 1781.51 10196.7 1918.12 9961.74 1918.12ZM10382.4 279.031 9937.64 1049.42H9382.58V279.031H9191.36V2098.43H9967.18C10316.9 2098.43 10551.8 1899 10551.8 1584.84 10551.8 1333.52 10375.1 1146.17 10142.9 1072.4L10601 279.031H10382.4" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M16968.3 1918.12H16389.1V1229.69H16976.5C17214.1 1229.69 17356.2 1369.02 17356.2 1571.17 17356.2 1781.51 17203.2 1918.12 16968.3 1918.12ZM17389 279.031 16944.2 1049.42H16389.1V279.031H16197.9V2098.43H16973.7C17323.4 2098.43 17558.4 1899 17558.4 1584.84 17558.4 1333.52 17381.6 1146.17 17149.4 1072.4L17607.5 279.031H17389" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M11576.1 1918.12V279.031H11382.2V1918.12H10745.7V2098.43H12215.4V1918.12H11576.1" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M13772.4 279.031 12723.3 1868.94V279.031H12540.3V2098.43H12786.2L13810.6 546.75V2098.43H13996.4V279.031H13772.4" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M14515.2 279.031V2098.43H15769.1V1918.12H14709.2V1333.52H15632.5V1155.93H14709.2V459.34H15796.5V279.031H14515.2" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M19169.9 1825.24 19019.7 1710.5C18902.2 1860.75 18721.9 1950.9 18503.4 1950.9 18298.5 1950.9 18101.8 1871.66 18101.8 1653.13 18101.8 1437.31 18293 1388.14 18538.9 1325.32 18874.9 1240.61 19200 1150.49 19200 787.148 19200 459.34 18932.3 246.25 18533.4 246.25 18208.3 246.25 17965.2 388.301 17828.6 593.199L17995.3 710.66C18120.9 513.961 18334 426.559 18552.6 426.559 18817.5 426.559 19000.6 554.941 19000.6 778.949 19000.6 1019.35 18782 1063.05 18476.1 1134.1 18191.9 1199.66 17905.1 1297.98 17905.1 1631.26 17905.1 1950.9 18172.8 2131.18 18517 2131.18 18790.2 2131.18 19019.7 2016.47 19169.9 1825.24" fill="currentColor"/>
+          <path transform="matrix(.1,0,0,-.1,0,461.62)" d="M4735.61 1741.19 3893.79 283.129C3856.96 219.32 3788.31 179.68 3714.64 179.68H3302.74L4307.24 1919.52H4632.66C4694.59 1919.52 4725.28 1877.95 4735.61 1860.09 4745.91 1842.2 4766.57 1794.83 4735.61 1741.19ZM207.254 2204.66C170.422 2268.48 170.422 2347.74 207.254 2411.53L413.207 2768.24 1762.65 430.941 1677.93 284.199C1638.67 216.172 1566.62 178.621 1493.14 179.859 1485.71 179.961 1478.34 180.449 1471.05 181.34 1466.89 181.859 1462.75 182.73 1458.61 183.512 1455.13 184.152 1451.66 184.781 1448.24 185.59 1443.58 186.719 1438.94 188.02 1434.33 189.469 1431.79 190.27 1429.31 191.16 1426.81 192.051 1421.74 193.859 1416.68 195.711 1411.71 197.941 1411.39 198.082 1411.1 198.262 1410.79 198.398 1404.63 201.199 1398.54 204.289 1392.56 207.742L1392.41 207.48C1361.45 225.371 1335.08 251.219 1316.67 283.102L207.254 2204.66ZM3714.64 4436.54C3788.31 4436.54 3856.96 4396.9 3893.79 4333.09L4099.74 3976.38H1400.83L1316.11 4123.12C1276.81 4191.18 1280.37 4272.38 1318.23 4335.41 1321.98 4341.71 1326.04 4347.77 1330.4 4353.58 1333.03 4357.07 1335.97 4360.35 1338.83 4363.69 1341.02 4366.24 1343.19 4368.8 1345.49 4371.24 1348.84 4374.78 1352.34 4378.2 1355.97 4381.52 1357.87 4383.26 1359.83 4384.92 1361.79 4386.59 1365.92 4390.11 1370.09 4393.6 1374.55 4396.82 1374.75 4396.96 1374.96 4397.08 1375.15 4397.21 1380.72 4401.21 1386.51 4404.98 1392.56 4408.48L1392.41 4408.73C1423.39 4426.62 1458.98 4436.54 1495.82 4436.54H3714.64ZM4735.61 2756.13C4725.28 2738.27 4694.59 2696.69 4632.66 2696.69H2139.66L1873.99 3156.85H4572.9L4735.61 2875.03C4766.57 2821.35 4745.91 2773.99 4735.61 2756.13ZM4469.15 3336.54H1770.25L1504.57 3796.7H4203.48L4469.15 3336.54ZM2235.81 1250.48 886.367 3587.78 1152.54 4048.8C1155.22 4043.63 1157.54 4038.37 1160.48 4033.28L2501.47 1710.62 2235.81 1250.48ZM1866.4 610.641 516.953 2947.94 782.617 3408.08 2132.06 1070.78 1866.4 610.641ZM2795.26 1860.09C2816.42 1896.75 2855.89 1919.52 2898.21 1919.52H3360.91L2356.42 179.68H1824.07C1827.21 184.602 1830.61 189.25 1833.56 194.352L2795.26 1860.09ZM4099.74 1919.52 3095.24 179.68H2563.92L3568.41 1919.52H4099.74ZM4891.23 1949.93C4837.26 2043.4 4740.59 2099.21 4632.66 2099.21H2898.21C2791.9 2099.21 2692.81 2042.02 2639.63 1949.93L2605.22 1890.32 2243.4 2517.01H4632.66C4740.59 2517.01 4837.26 2572.82 4891.22 2666.26 4945.19 2759.76 4945.21 2871.37 4891.23 2964.87L4049.42 4422.93C3980.58 4542.18 3852.3 4616.22 3714.64 4616.22H1495.82C1422.46 4616.22 1352.09 4594.66 1291.63 4556.96 1282.89 4551.51 1274.26 4545.96 1266.1 4539.94 1260.95 4536.13 1256.08 4532 1251.12 4527.94 1244.18 4522.27 1237.44 4516.45 1230.98 4510.37 1226.35 4506.01 1221.79 4501.61 1217.37 4497.01 1210.39 4489.77 1203.86 4482.22 1197.52 4474.51 1194.31 4470.61 1190.88 4466.93 1187.81 4462.88 1179.09 4451.39 1171.18 4439.41 1163.84 4427.11 1162.98 4425.66 1161.89 4424.39 1161.04 4422.93L51.6289 2501.4C-17.2109 2382.19-17.2109 2234.06 51.6289 2114.82L1161.04 193.23C1197.8 129.609 1251.77 79.4219 1314.78 45.9102 1323.75 41.1406 1332.75 36.5 1341.92 32.5 1347.86 29.9102 1353.94 27.75 1360.01 25.4492 1368.3 22.332 1376.61 19.4219 1385.01 16.8906 1391.2 15.0313 1397.38 13.2617 1403.67 11.7109 1413.19 9.35156 1422.74 7.51953 1432.34 5.92188 1437.58 5.03906 1442.72 3.85938 1448.01 3.19141 1462.19 1.41016 1476.38 .558594 1490.56 .351563 1492.33 .332031 1494.05 0 1495.82 0H3714.64C3766.26 0 3816.56 10.4102 3862.9 29.7188 3940.14 61.8789 4006.39 118.742 4049.42 193.23L4049.4 193.242C4049.41 193.242 4049.41 193.25 4049.42 193.262L4891.23 1651.34C4945.21 1744.81 4945.19 1856.43 4891.23 1949.93" fill="currentColor"/>
+          <use data-text="&#x00ae;" xlink:href="#font_0_1" transform="matrix(100,0,0,-100,1932.16,319.901)" fill="currentColor"/>
+          </svg>
+          <div class="hdr-div"></div>
+          <div class="hdr-text">
+            <span class="hdr-eyebrow">Estate Plan Binder</span>
+            <span class="hdr-title">{{FAMILY}} Family Estate Plan</span>
+          </div>
+        </div>
+        <div class="hdr-dates">{{SUBTITLE}}</div>
+      </div>{{CONTEXT}}
+    </div>
+  </div>
+
+  <main>
+{{MAIN}}
+  </main>
+
+  <div class="page-footer"><span>{{PREPARER}} | Cerity Partners, LLC | 53 State St, 39th Floor, Boston, MA 02109</span><span>{{FAMILY}} Estate Plan &mdash; Prepared {{PREPARED}}</span></div>
+</body>
+</html>

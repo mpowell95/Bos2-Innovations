@@ -8,6 +8,50 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.1 — 2026-09 — Binder templated; nothing reads the archive at run time
+
+The Family Estate Plan Binder was the last path where a model still copied a shell — Step 6
+told it to read `_html-shell-ARCHIVE.md` Part 6 in an explicit line range, which worked but
+left the original failure mode one mistake away.
+
+- `assets/binder-template.html` — the binder shell as a real file, logo inline, `{{...}}`
+  placeholders. Part 6's stylesheet extracted verbatim, not retyped.
+- `assets/build_binder.py` — renders binder JSON. Imports build.py's validators, so the guide
+  and the binder are held to one standard rather than two drifting ones.
+- `references/binder-guide.md` rewritten: a JSON schema, no HTML.
+- **No file in this skill is read at run time above the ~16,000-character view limit.**
+
+Binder-specific validation: status pills restricted to the four defined classes; every guide
+link must be a bare relative `.html` filename; and **every cross-link must match a document
+listed in the inventory** — a link to a guide that was never delivered fails the build, which
+is the binder's own characteristic failure (broken relative links in a folder uploaded to Box).
+
+Caught while building it: `build_binder.py` initially used `<span class="na">` for a document
+with no guide. `.na` is defined in the guide stylesheet but not the binder's smaller one, so
+the class-coverage check refused the build. Exactly the bug class that shipped unnoticed four
+times in v1.x, caught here before a single file was written.
+
+Verified: the binder builds; its `<style>` and logo are byte-identical to the template; no
+`<script>`; all four panels, all four pill types, done-stage check icons and the deceased
+marker render; eight negative tests each refuse. Full regression across all five modes —
+guide single, guide two-column, guide with a flowchart-only overview section, guide with a
+binder crumb, and the binder index.
+
+### Real-document verification of v2.0
+
+Two live runs before this entry, both with the shell byte-identical to the template:
+a single-column revocable trust (11 sections, 31 questions, 41 citations) and a mirror/paired
+two-column pair (15 sections, 37 questions, 65 citations, 4 two-col and 6 identical-row blocks).
+Zero drift, zero aria/.open mismatches, zero undefined classes in either.
+
+One bug surfaced by the first run and fixed: the first-question-open default was implemented
+literally as "section 2, item 0", but section 2 is normally the flowchart-only Trust Structure
+Overview, so no question opened anywhere. Now opens the first question of the earliest open
+section that has questions. Worth noting the v1.18 output got this right from prose — rigid
+generation removes drift but can encode a rule more narrowly than it was meant.
+
+---
+
 ## v2.0 — 2026-09 — Template + builder; the model no longer writes the shell
 
 ### Root cause found for the entire v1.4–v1.18 drift history
