@@ -8,6 +8,38 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.7 — 2026-09 — Two worksheet bugs, one of them reported by the skill itself
+
+From the first real two-column run (Krasker, 15 sections, 39 questions, 74 claims). The shipped
+guide was clean — `<style>`, `<script>` and logo byte-identical to the template, 0 aria/.open
+mismatches, no undefined classes, 79 citations, correct two-column layout.
+
+**Coverage was computed from claim lines only.** An answer that is not a decision-driving claim
+gets no worksheet line, but can still carry a citation — so its section was reported as "never
+cited". The run caught this itself: Article XXIV appeared on the never-cited list while the
+S-corporation answer cited it in the shipped HTML, and the worksheet was annotated saying so and
+flagging it for the maintainer. Confirmed by grep. Coverage now walks the whole content structure
+and counts every citation. (The first fix attempt pattern-matched serialised JSON and silently
+matched nothing, because `json.dumps` escapes the quotes in the embedded HTML; it walks the
+structure now.)
+
+**Citations were shown doubled** on rows whose own `cite` also appeared inside their body —
+"Article XXI Article XXI". Deduped, order preserved.
+
+**"Check these first" now always appears**, even with nothing to report, saying explicitly that
+silence is not a clearance: the interested-trustee check compares names in Quick Reference rows,
+so a document naming no beneficiaries there — one disposing to "my descendants" generally, as
+this one does — gives it nothing to compare. Previously the section was simply absent, which
+reads like a pass.
+
+On whether the run rubber-stamped: all 74 claims came back `[x]` with no `[!]` or `[?]`, which is
+the pattern to be suspicious of. Three things argue against it here — it added a substantive
+cross-reference note on one claim, it annotated the never-cited list as "confirmed by direct read
+to be pure boilerplate", and it caught a bug in the worksheet generator by grepping the output.
+None of that is what a rubber stamp does. It cannot be proven from the file, and that limit stands.
+
+---
+
 ## v2.6 — 2026-09 — Fit the work inside one turn
 
 Reported from real use: running the skill exhausts the turn and needs a Continue click. The cause

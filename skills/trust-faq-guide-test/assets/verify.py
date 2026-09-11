@@ -67,6 +67,36 @@ def cites_in(s):
     return re.findall(r'<span class="section-ref">([^<]*)</span>', str(s))
 
 
+def all_cites(data):
+    """Every citation anywhere in the content file.
+
+    Coverage must not be computed from claim lines alone: an answer that is not a
+    decision-driving claim (so gets no worksheet line) can still carry a citation,
+    and counting only claims reported such a section as "never cited". Found in the
+    first real two-column run -- Article XXIV was cited in the guide and listed as
+    uncited here. Walks the structure rather than pattern-matching serialised JSON,
+    where the escaped quotes made the match unreliable.
+    """
+    found = set()
+
+    def walk(node, key=None):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                walk(v, k)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v, key)
+        elif isinstance(node, str):
+            if key == "cite" and node.strip():
+                found.add(node.strip())
+            for c in re.findall(r'<span class="section-ref">([^<]*)</span>', node):
+                if c.strip():
+                    found.add(c.strip())
+
+    walk(data)
+    return found
+
+
 def claims(data):
     """Every decision-driving assertion in the content file, with its citations."""
     out = []
@@ -75,8 +105,13 @@ def claims(data):
         text = " ".join(strip_tags(text).split())
         if not text:
             return
-        out.append({"kind": kind, "text": text[:220],
-                    "cites": [c for c in cites if c], "loc": loc})
+        seen, uniq = set(), []            # a row's own cite often repeats inside its body
+        for c in cites:
+            c = str(c).strip()
+            if c and c not in seen:
+                seen.add(c)
+                uniq.append(c)
+        out.append({"kind": kind, "text": text[:220], "cites": uniq, "loc": loc})
 
     for i, r in enumerate(data.get("quick_ref") or []):
         if r.get("not_found"):
@@ -145,6 +180,9 @@ def cross_checks(data):
             names |= {("trustee", n) for n in flat if n}
         if any(w in k for w in ("beneficiar", "remainder", "children")):
             names |= {("beneficiary", n) for n in flat if n}
+    # Scope: this compares names that appear in Quick Reference rows only. A document
+    # that names no beneficiaries there -- e.g. one disposing to "my descendants"
+    # generally -- gives it nothing to compare, so silence here is not a clearance.
     trustees = {n for role, n in names if role == "trustee"}
     benes = {n for role, n in names if role == "beneficiary"}
     both = {n for n in trustees & benes if len(n) > 3}
@@ -184,8 +222,10 @@ def do_extract(content_path, out_path, quiet=False):
     cl = claims(data)
     warn = cross_checks(data)
     idx = [c.strip() for c in data.get("document_sections") or []]
-    used = {c for x in cl for c in x["cites"]}
-    unused = [c for c in idx if c not in used]
+    used = all_cites(data)
+    loose = {u.lstrip("\u00a7").strip() for u in used}
+    unused = [c for c in idx
+              if c not in used and c.lstrip("\u00a7").strip() not in loose]
 
     L = [f"# Verification worksheet — {data.get('title','(untitled)')}",
          "",
@@ -195,18 +235,28 @@ def do_extract(content_path, out_path, quiet=False):
          "A line you did not look up is not `[x]`. This worksheet is delivered with the "
          "guide as the record that it was checked.",
          ""]
+    L += ["## Check these first", ""]
     if warn:
-        L += ["## Check these first", ""]
         for w in warn:
             L += [f"- {w}", ""]
+    else:
+        L += ["- No automatic cross-check fired. That is not a clearance: the "
+              "interested-trustee check compares names in Quick Reference rows, so a "
+              "document that names no beneficiaries there (one disposing to \"my "
+              "descendants\" generally, say) gives it nothing to compare. Confirm by "
+              "reading: is any trustee also a beneficiary, and if so does the guide say "
+              "who decides distributions to that person?", ""]
     L += [f"## Claims ({len(cl)})", ""]
     for i, c in enumerate(cl, 1):
         cites = " ".join(c["cites"]) or "(no citation)"
         L.append(f'- [ ] {i:03d} | {c["kind"]} | {cites} | {c["text"]}')
     L += ["",
-          f"## Citation coverage",
+          "## Citation coverage",
           "",
-          f"The document has {len(idx)} sections; the guide cites {len(used)}."]
+          f"The document has {len(idx)} sections; the guide cites {len(idx) - len(unused)} "
+          f"of them ({len(used)} distinct citations in all).",
+          "",
+          "Counted across the whole guide, not only the claims listed above."]
     if unused:
         L += ["", "Never cited — confirm none of these belong in the guide:", ""]
         L += [f"- {u}" for u in unused]
