@@ -16,7 +16,12 @@ normally has but this guide omits.
 
 Usage:
     python3 verify.py extract content.json worksheet.md
-    python3 verify.py check worksheet.md
+    python3 verify.py mark  worksheet.md marks.txt      # apply marks, report progress
+    python3 verify.py check worksheet.md [marks.txt]    # gate
+
+A long worksheet can be marked over several turns: run "mark" with each batch as you
+work through the document -- it applies the marks and tells you how many remain,
+without failing -- then run "check" once at the end.
 
 Worksheet marks (edit the box, add a note after '--'):
     [x] confirmed against the document
@@ -322,6 +327,26 @@ def apply_marks(ws_path, marks_path):
     print(f"    applied {applied} mark(s) to {Path(ws_path).name}")
 
 
+def do_mark(ws_path, marks_path):
+    """Apply a batch of marks and report progress, without gating.
+
+    Verifying 70+ claims against a long document does not fit in one turn. This lets
+    the work be done in batches: mark what you have checked so far, come back, mark
+    more. Only "check" gates, and it is run once at the end.
+    """
+    apply_marks(ws_path, marks_path)
+    marks = CLAIM_RE.findall(Path(ws_path).read_text())
+    left = [i for m, i in marks if m.strip() == ""]
+    done = len(marks) - len(left)
+    print(f"    {done} of {len(marks)} claims marked, {len(left)} remaining")
+    if left:
+        print(f"    still unmarked: {', '.join(left[:20])}"
+              f"{' ...' if len(left) > 20 else ''}")
+        print("    Continue marking, then run: verify.py check " + Path(ws_path).name)
+    else:
+        print("    All claims marked. Run: verify.py check " + Path(ws_path).name)
+
+
 def do_check(path, marks=None):
     if marks:
         apply_marks(path, marks)
@@ -370,10 +395,15 @@ def do_check(path, marks=None):
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in ("extract", "check"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("extract", "mark", "check"):
         print(__doc__.strip(), file=sys.stderr)
         sys.exit(2)
-    if sys.argv[1] == "extract":
+    if sys.argv[1] == "mark":
+        if len(sys.argv) != 4:
+            print("usage: verify.py mark worksheet.md marks.txt", file=sys.stderr)
+            sys.exit(2)
+        do_mark(sys.argv[2], sys.argv[3])
+    elif sys.argv[1] == "extract":
         if len(sys.argv) < 4:
             print("usage: verify.py extract content.json [more.json ...] worksheet.md",
                   file=sys.stderr)

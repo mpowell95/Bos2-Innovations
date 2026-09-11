@@ -8,6 +8,36 @@ the ~16,000-character read limit, meaning SKILL.md itself truncated when viewed.
 
 ---
 
+## v2.8 — 2026-09 — Multi-turn work, planned for rather than discovered
+
+A real mirror-pair run (Krasker, two 47-page trusts from Box) did the right thing and still could
+not finish: it read both documents, diffed them for genuine differences rather than name swaps,
+wrote content.json, built a clean 78KB guide with a 71-claim worksheet, then ran out of tool calls
+and reported "built but not yet verified — I'd rather flag this now than hand you an unverified
+guide labeled as done." That is exactly the intended behaviour at a turn boundary. The gap was
+that nothing in the skill planned for it.
+
+**`verify.py mark <worksheet> <marks.txt>`** applies a batch of marks and reports how many claims
+remain, exiting 0. Previously the only way to apply marks was `check`, which gates — so a partial
+pass ended in a failure message, which reads like something went wrong when the work is simply
+unfinished. Verifying 71 claims against two long documents does not fit in one turn; now it can be
+done in passes, with `check` run once at the end.
+
+**`references/large-guides.md` now opens with staging guidance**: the four stages (read and write
+content, build, verify, deliver), the fact that everything persists on disk between turns so a
+follow-up resumes from the content files rather than re-reading the documents, and the instruction
+to stop at a stage boundary with a one-line status when a turn is running out. Explicitly: do not
+compress verification to fit a turn, and never present an unverified guide as finished. SKILL.md
+now points there before Step 4 rather than only when the content file looks large.
+
+Also fixed: two edits in v2.6 silently did nothing, because the text they targeted had moved from
+SKILL.md into large-guides.md in that same version. Step 5 now really does describe batch marking.
+
+Verified from the shipped package: split build, batch mark then check, five build modes, binder,
+14 build negatives, 6 gate behaviours, and a malformed marks file still refusing under `mark`.
+
+---
+
 ## v2.7 — 2026-09 — Two worksheet bugs, one of them reported by the skill itself
 
 From the first real two-column run (Krasker, 15 sections, 39 questions, 74 claims). The shipped

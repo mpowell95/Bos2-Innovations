@@ -171,6 +171,10 @@ V=$(find /mnt/skills -path '*trust-faq-guide*/assets/verify.py' | head -1)
 python3 "$V" check /mnt/user-data/outputs/[GuideName]_verification.md
 ```
 
+A long worksheet is marked in batches, over more than one turn if needed:
+`verify.py mark <worksheet> <marks.txt>` applies a batch and reports how many remain without
+failing; `check` runs once at the end. Format and staging: `references/large-guides.md`.
+
 The worksheet lists every decision-driving claim — names, amounts, ages, succession order,
 distribution standards, flowchart stages, table rows, NOT FOUND flags — with its citation. Mark
 each by **going back to the document**:
